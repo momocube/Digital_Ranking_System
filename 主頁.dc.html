@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#05070f;overflow:hidden;}
+@keyframes gridPan{from{background-position:0 0,0 0;}to{background-position:48px 48px,48px 48px;}}
+@keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+@keyframes pulseRed{0%,100%{opacity:.55;}50%{opacity:1;}}
+@keyframes scan{0%{transform:translateY(-220px);}100%{transform:translateY(120vh);}}
+@keyframes breathe{0%,100%{opacity:.32;}50%{opacity:.7;}}
+@keyframes titleGlow{0%,100%{text-shadow:0 0 22px rgba(0,229,255,.45);}50%{text-shadow:0 0 36px rgba(0,229,255,.75);}}
+</style>
+</helmet>
+
+<div style="width:100vw;height:100vh;position:relative;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(0,229,255,.08),transparent 60%),radial-gradient(ellipse 70% 60% at 100% 100%,rgba(255,45,149,.08),transparent 60%),#05070f;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans TC',sans-serif;">
+
+  <!-- 背景網格 -->
+  <div style="position:absolute;inset:-48px;background-image:linear-gradient(rgba(0,229,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.07) 1px,transparent 1px);background-size:48px 48px;animation:gridPan 16s linear infinite;pointer-events:none;"></div>
+
+  <!-- 邊緣暈光 -->
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 110% 110% at 50% 50%,transparent 56%,rgba(0,0,0,.55));pointer-events:none;"></div>
+
+  <!-- 掃描線 -->
+  <div style="position:absolute;left:0;right:0;height:180px;background:linear-gradient(rgba(0,229,255,0),rgba(0,229,255,.07),rgba(0,229,255,0));animation:scan 9s linear infinite;pointer-events:none;"></div>
+
+  <!-- 中英切換 -->
+  <div style="position:absolute;top:clamp(14px,2.5vh,24px);right:clamp(14px,2vw,28px);z-index:20;display:flex;gap:8px;">
+    <button onClick="{{ setZh }}" style="{{ zhBtn }}">中文</button>
+    <button onClick="{{ setEn }}" style="{{ enBtn }}">EN</button>
+  </div>
+
+  <div style="position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:clamp(14px,3vh,38px);padding:clamp(12px,3vh,40px);max-width:100vw;max-height:100vh;">
+
+    <!-- 標題區 -->
+    <div style="text-align:center;">
+      <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.8vh,17px);letter-spacing:clamp(5px,1vw,11px);color:#34c8e8;margin-bottom:clamp(8px,1.5vh,14px);">◢ NEON CLASH · LEADERBOARD ◣</div>
+      <div style="{{ titleMainStyle }}">{{ titleMain }}</div>
+      <div style="{{ titleSubStyle }}">{{ titleSub }}</div>
+    </div>
+
+    <!-- 身份卡 -->
+    <div style="{{ cardStyle }}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:clamp(14px,2.5vh,24px);padding-bottom:clamp(12px,2vh,18px);border-bottom:1px solid {{ cardDividerColor }};">
+        <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(10px,1.5vh,13px);letter-spacing:clamp(3px,0.6vw,5px);color:#4f8aa0;">AUTHORIZATION STATUS</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="{{ dotStyle }}"></span>
+          <span style="{{ statusTextStyle }}">{{ statusText }}</span>
+        </div>
+      </div>
+
+      <!-- 已綁定 -->
+      <sc-if value="{{ showBound }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:clamp(12px,2vh,18px);">
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(9px,1.3vh,12px);letter-spacing:2px;color:#5fb6cf;margin-bottom:clamp(4px,1vh,8px);">KEY BOUND TO</div>
+            <div style="{{ boundNameStyle }}">{{ boundName }}</div>
+            <div style="{{ boundSubStyle }}">{{ boundSub }}</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,18px);padding-top:clamp(10px,2vh,16px);border-top:1px solid rgba(0,229,255,.15);">
+            <div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(9px,1.2vh,11px);letter-spacing:2px;color:#4f8aa0;margin-bottom:clamp(3px,0.8vh,6px);">FIELD AUTHORIZED</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(12px,1.8vh,15px);color:#7fe6f8;letter-spacing:1px;">{{ venuesText }}</div>
+            </div>
+            <div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(9px,1.2vh,11px);letter-spacing:2px;color:#4f8aa0;margin-bottom:clamp(3px,0.8vh,6px);">KEY ID</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(12px,1.8vh,15px);color:#7fe6f8;letter-spacing:1px;">{{ keyMasked }}</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- 未綁定 -->
+      <sc-if value="{{ showUnbound }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:clamp(10px,1.8vh,14px);align-items:center;text-align:center;padding:clamp(6px,1.5vh,10px) 0 4px;">
+          <div style="{{ unboundMainStyle }}">{{ unboundMain }}</div>
+          <div style="font-family:Orbitron,sans-serif;font-weight:700;font-size:clamp(11px,1.5vh,14px);letter-spacing:clamp(3px,0.7vw,5px);color:#ff6680;">{{ unboundSub }}</div>
+          <div style="{{ unboundDescStyle }}">{{ unboundDesc }}</div>
+        </div>
+      </sc-if>
+
+      <!-- 載入中 -->
+      <sc-if value="{{ showLoading }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:clamp(14px,3vh,24px) 0;">
+          <span style="width:11px;height:11px;border-radius:50%;background:#34c8e8;box-shadow:0 0 12px #34c8e8;animation:pulse 1.2s ease-in-out infinite;"></span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:clamp(12px,1.7vh,15px);letter-spacing:3px;color:#7fe6f8;">CHECKING LICENSE...</span>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- 進入按鈕 -->
+    <button onClick="{{ enter }}" style="{{ btnStyle }}">
+      <span style="{{ btnIconStyle }}">{{ btnIcon }}</span>
+      <span>{{ btnText }}</span>
+    </button>
+
+    <!-- 底部資訊 -->
+    <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(9px,1.3vh,12px);letter-spacing:2px;color:#3f7f93;text-align:center;line-height:1.7;">
+      <div>NEON CLASH BROADCAST SYSTEM · v1.0</div>
+      <div style="opacity:.7;">{{ timeText }}</div>
+    </div>
+
+  </div>
+</div>
+
+<template id="__bundler_thumbnail" data-bg-color="#05070f">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <text x="600" y="190" fill="#eafdff" font-family="sans-serif" font-weight="900" font-size="72" text-anchor="middle">LIVE RANKING</text>
+    <text x="600" y="250" fill="#ff2d95" font-family="sans-serif" font-weight="700" font-size="26" text-anchor="middle" letter-spacing="6">即時排行系統</text>
+    <rect x="280" y="340" width="640" height="200" rx="6" fill="none" stroke="#00e5ff" stroke-width="5"/>
+    <text x="600" y="430" fill="#eafdff" font-family="sans-serif" font-weight="900" font-size="36" text-anchor="middle">金鑰已綁定</text>
+    <text x="600" y="478" fill="#ff6bb0" font-family="sans-serif" font-weight="700" font-size="20" text-anchor="middle" letter-spacing="4">AUTHORIZED</text>
+    <rect x="430" y="600" width="340" height="68" rx="4" fill="#ff2d95"/>
+    <text x="600" y="645" fill="#fff" font-family="sans-serif" font-weight="700" font-size="24" text-anchor="middle" letter-spacing="6">▶ ENTER</text>
+  </svg>
+</template>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { license: null, loading: true, time: '', lang: 'zh' };
+
+  componentDidMount() {
+    // 先同步讀 localStorage(金鑰 + 語言設定),避免首次渲染閃爍
+    let lic = null;
+    try {
+      const raw = localStorage.getItem('leaderboard_license');
+      if (raw) lic = JSON.parse(raw);
+    } catch (e) {}
+    let lang = 'zh';
+    try { lang = localStorage.getItem('leaderboard_lang') || 'zh'; } catch (e) {}
+    this.setState({ license: lic, loading: !lic, lang: lang });
+
+    // 再非同步讀 license.json(主軟體寫入的檔案優先)
+    this.loadLicenseFile();
+
+    // 跨分頁同步:其他頁面切換語言時這邊跟著變
+    this._onStorage = (e) => {
+      if (e.key === 'leaderboard_lang' && e.newValue) this.setState({ lang: e.newValue });
+    };
+    window.addEventListener('storage', this._onStorage);
+
+    this._timer = setInterval(() => this.tick(), 1000);
+    this.tick();
+  }
+  componentWillUnmount() {
+    clearInterval(this._timer);
+    if (this._onStorage) window.removeEventListener('storage', this._onStorage);
+  }
+
+  async loadLicenseFile() {
+    try {
+      const res = await fetch('./license.json', { cache: 'no-store' });
+      if (res.ok) {
+        const lic = await res.json();
+        if (lic && (lic.storeId || lic.storeNameZh)) {
+          this.setState({ license: lic, loading: false });
+          try { localStorage.setItem('leaderboard_license', JSON.stringify(lic)); } catch (e) {}
+          return;
+        }
+      }
+    } catch (e) {}
+    // 檔案不存在或讀取失敗：若 localStorage 也沒有 → 結束載入態，顯示未綁定
+    if (!this.state.license) {
+      this.setState({ loading: false });
+    }
+  }
+
+  tick() {
+    const d = new Date();
+    const p2 = (n) => String(n).padStart(2, '0');
+    const txt = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' +
+                p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
+    this.setState({ time: txt });
+  }
+
+  enter = () => {
+    // 安全閥：未綁定就不動作
+    if (!this.state.license) return;
+    window.location.href = './投播控制台.dc.html';
+  };
+
+  setLang = (l) => () => {
+    try { localStorage.setItem('leaderboard_lang', l); } catch (e) {}
+    this.setState({ lang: l });
+  };
+
+  maskKey(k) {
+    if (!k) return '— —';
+    const s = String(k);
+    if (s.length <= 6) return s;
+    return s.slice(0, 3) + '-***-' + s.slice(-4);
+  }
+
+  renderVals() {
+    const lic = this.state.license;
+    const loading = this.state.loading;
+    const bound = !loading && !!lic;
+    const unbound = !loading && !lic;
+    const en = this.state.lang === 'en';
+
+    // 卡片樣式：綁定 → 青色，未綁定 → 紅色，載入 → 中性
+    const cardW = 'min(580px,92vw)';
+    const cardPad = 'clamp(16px,3vh,28px) clamp(20px,4vw,36px)';
+    const cardBound = { width: cardW, border: '1px solid rgba(0,229,255,.35)', background: 'linear-gradient(160deg,rgba(0,229,255,.05),rgba(0,229,255,.01))', padding: cardPad, boxShadow: '0 0 40px rgba(0,229,255,.15), inset 0 0 30px rgba(0,229,255,.03)' };
+    const cardUnbound = { width: cardW, border: '1px solid rgba(255,51,85,.45)', background: 'linear-gradient(160deg,rgba(255,51,85,.07),rgba(255,51,85,.01))', padding: cardPad, boxShadow: '0 0 40px rgba(255,51,85,.2), inset 0 0 30px rgba(255,51,85,.04)' };
+    const cardLoading = { width: cardW, border: '1px solid rgba(0,229,255,.18)', background: 'rgba(0,229,255,.02)', padding: cardPad };
+    const cardStyle = bound ? cardBound : (unbound ? cardUnbound : cardLoading);
+    const cardDividerColor = bound ? 'rgba(0,229,255,.2)' : (unbound ? 'rgba(255,51,85,.25)' : 'rgba(0,229,255,.15)');
+
+    // 狀態點
+    const dotBound = { width: '9px', height: '9px', borderRadius: '50%', background: '#34c8e8', boxShadow: '0 0 10px #34c8e8', display: 'inline-block', animation: 'pulse 1.6s ease-in-out infinite' };
+    const dotUnbound = { width: '9px', height: '9px', borderRadius: '50%', background: '#ff3355', boxShadow: '0 0 10px #ff3355', display: 'inline-block', animation: 'pulseRed 1.2s ease-in-out infinite' };
+    const dotLoading = { width: '9px', height: '9px', borderRadius: '50%', background: '#7f8fa0', boxShadow: '0 0 8px #7f8fa0', display: 'inline-block', animation: 'pulse 1.2s ease-in-out infinite' };
+    const dotStyle = bound ? dotBound : (unbound ? dotUnbound : dotLoading);
+
+    const statusFs = 'clamp(10px,1.5vh,13px)';
+    const statusBound = { fontFamily: "'Share Tech Mono',monospace", fontSize: statusFs, letterSpacing: '2.5px', color: '#7fe6f8' };
+    const statusUnbound = { fontFamily: "'Share Tech Mono',monospace", fontSize: statusFs, letterSpacing: '2.5px', color: '#ff8899' };
+    const statusLoadingS = { fontFamily: "'Share Tech Mono',monospace", fontSize: statusFs, letterSpacing: '2.5px', color: '#9aa8b8' };
+    const statusTextStyle = bound ? statusBound : (unbound ? statusUnbound : statusLoadingS);
+    const statusText = loading ? 'CHECKING' : (bound ? 'AUTHORIZED' : 'UNAUTHORIZED');
+
+    // 按鈕：綁定 → 漸層發光，否則灰化 + not-allowed
+    const btnBase = {
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      gap: 'clamp(8px,1.3vw,14px)',
+      padding: 'clamp(12px,2.2vh,20px) clamp(36px,7vw,72px)',
+      fontFamily: 'Rajdhani,sans-serif', fontWeight: 700,
+      fontSize: 'clamp(15px,2.5vh,24px)',
+      letterSpacing: 'clamp(3px,0.7vw,6px)'
+    };
+    const btnEnabled = Object.assign({}, btnBase, {
+      color: '#fff',
+      background: 'linear-gradient(90deg,rgba(255,45,149,.9),rgba(0,229,255,.8))',
+      border: 'none',
+      boxShadow: '0 0 30px rgba(255,45,149,.4), 0 0 50px rgba(0,229,255,.2)',
+      cursor: 'pointer'
+    });
+    const btnDisabled = Object.assign({}, btnBase, {
+      color: '#6a4050',
+      background: 'rgba(50,28,36,.4)',
+      border: '1px solid rgba(120,60,80,.35)',
+      boxShadow: 'none',
+      cursor: 'not-allowed',
+      opacity: 0.55
+    });
+    const btnStyle = bound ? btnEnabled : btnDisabled;
+    const btnIconFs = 'clamp(14px,2vh,20px)';
+    const btnIconStyle = bound ? { fontSize: btnIconFs } : { fontSize: btnIconFs, opacity: 0.6 };
+
+    // 場域文字
+    let venuesText = '— —';
+    if (lic && lic.venues) {
+      if (Array.isArray(lic.venues)) {
+        venuesText = lic.venues.map(function (v) { return String(v).toUpperCase(); }).join(' · ');
+      } else {
+        venuesText = String(lic.venues).toUpperCase();
+      }
+    }
+
+    // 語言切換按鈕樣式(跟其他頁面一致)
+    const langBase = { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '2px', padding: 'clamp(5px,0.8vh,7px) clamp(10px,1.4vw,16px)', cursor: 'pointer', border: '1px solid rgba(0,229,255,.3)', background: 'rgba(0,0,0,.4)', color: '#5f93a8' };
+    const langOn = Object.assign({}, langBase, { border: '1px solid #34c8e8', background: 'rgba(0,229,255,.16)', color: '#eafdff' });
+
+    // 標題:zh 主中文/副英文,en 主英文/副不同英文
+    const titleMain = en ? 'LIVE RANKING' : '即時排行系統';
+    const titleSub = en ? 'LEADERBOARD SYSTEM' : 'LIVE RANKING';
+    const titleMainStyle = en
+      ? { fontFamily: 'Orbitron,sans-serif', fontWeight: 900, fontSize: 'clamp(32px,7.5vh,64px)', letterSpacing: 'clamp(2px,0.6vw,6px)', color: '#eafdff', lineHeight: '1', animation: 'titleGlow 4s ease-in-out infinite' }
+      : { fontFamily: "'Noto Sans TC',sans-serif", fontWeight: 900, fontSize: 'clamp(32px,7.5vh,64px)', letterSpacing: 'clamp(4px,0.9vw,8px)', color: '#eafdff', lineHeight: '1', animation: 'titleGlow 4s ease-in-out infinite' };
+    const titleSubStyle = en
+      ? { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 'clamp(14px,2.4vh,22px)', letterSpacing: 'clamp(4px,0.9vw,8px)', color: '#ff2d95', marginTop: 'clamp(8px,1.5vh,14px)', textShadow: '0 0 14px rgba(255,45,149,.5)' }
+      : { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: 'clamp(14px,2.4vh,22px)', letterSpacing: 'clamp(4px,0.9vw,8px)', color: '#ff2d95', marginTop: 'clamp(8px,1.5vh,14px)', textShadow: '0 0 14px rgba(255,45,149,.5)' };
+
+    // 已綁定主副:zh 主中(動詞+店名)/副英店名,en 主英店名/副中店名
+    const storeZh = (lic && (lic.storeNameZh || lic.storeName)) || '— —';
+    const storeEn = (lic && lic.storeNameEn) || '';
+    const boundName = en ? (storeEn || storeZh) : ('金鑰已綁定:' + storeZh);
+    const boundSub = en ? storeZh : storeEn;
+    const boundNameStyle = en
+      ? { fontFamily: 'Orbitron,sans-serif', fontWeight: 900, fontSize: 'clamp(20px,3.8vh,32px)', letterSpacing: 'clamp(3px,0.6vw,5px)', color: '#eafdff', textShadow: '0 0 18px rgba(0,229,255,.5)', lineHeight: '1.2' }
+      : { fontFamily: "'Noto Sans TC',sans-serif", fontWeight: 900, fontSize: 'clamp(18px,3.5vh,30px)', color: '#eafdff', textShadow: '0 0 18px rgba(0,229,255,.5)', letterSpacing: '1px', lineHeight: '1.2' };
+    const boundSubStyle = en
+      ? { fontFamily: "'Noto Sans TC',sans-serif", fontWeight: 700, fontSize: 'clamp(12px,2vh,17px)', color: '#ff6bb0', marginTop: 'clamp(4px,1vh,8px)', letterSpacing: '1px' }
+      : { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: 'clamp(12px,2.1vh,18px)', letterSpacing: 'clamp(3px,0.6vw,5px)', color: '#ff6bb0', marginTop: 'clamp(4px,1vh,8px)' };
+
+    // 未綁定:zh 紅大字「尚未綁定金鑰」/ en 紅大字「NO LICENSE KEY」
+    const unboundMain = en ? '⚠ NO LICENSE KEY' : '⚠ 尚未綁定金鑰';
+    const unboundSub = en ? 'UNAUTHORIZED STATION' : 'NO LICENSE KEY DETECTED';
+    const unboundDesc = en
+      ? 'This station has not been registered. Please complete license binding in the main software before opening this page.'
+      : '本機尚未完成金鑰註冊,無法啟動投播控制台。請先在主軟體完成金鑰綁定後再進入此頁。';
+    const unboundMainStyle = en
+      ? { fontFamily: 'Orbitron,sans-serif', fontWeight: 900, fontSize: 'clamp(18px,3.2vh,28px)', color: '#ff3355', textShadow: '0 0 18px rgba(255,51,85,.65)', letterSpacing: 'clamp(2px,0.5vw,4px)' }
+      : { fontFamily: "'Noto Sans TC',sans-serif", fontWeight: 900, fontSize: 'clamp(18px,3.2vh,28px)', color: '#ff3355', textShadow: '0 0 18px rgba(255,51,85,.65)', letterSpacing: '2px' };
+    const unboundDescStyle = en
+      ? { fontFamily: 'Rajdhani,sans-serif', fontSize: 'clamp(11px,1.5vh,14px)', color: '#ff8899', lineHeight: '1.7', marginTop: 'clamp(4px,1vh,8px)', maxWidth: 'min(440px,90%)' }
+      : { fontFamily: "'Noto Sans TC',sans-serif", fontSize: 'clamp(11px,1.5vh,14px)', color: '#ff8899', lineHeight: '1.7', marginTop: 'clamp(4px,1vh,8px)', maxWidth: 'min(420px,90%)' };
+
+    return {
+      cardStyle: cardStyle,
+      cardDividerColor: cardDividerColor,
+      dotStyle: dotStyle,
+      statusTextStyle: statusTextStyle,
+      statusText: statusText,
+
+      showBound: bound,
+      showUnbound: unbound,
+      showLoading: loading,
+
+      // 標題
+      titleMain: titleMain, titleSub: titleSub,
+      titleMainStyle: titleMainStyle, titleSubStyle: titleSubStyle,
+
+      // 已綁定
+      boundName: boundName, boundSub: boundSub,
+      boundNameStyle: boundNameStyle, boundSubStyle: boundSubStyle,
+      venuesText: venuesText,
+      keyMasked: this.maskKey(lic && lic.key),
+
+      // 未綁定
+      unboundMain: unboundMain, unboundSub: unboundSub, unboundDesc: unboundDesc,
+      unboundMainStyle: unboundMainStyle, unboundDescStyle: unboundDescStyle,
+
+      // 進入按鈕
+      btnStyle: btnStyle,
+      btnIconStyle: btnIconStyle,
+      btnIcon: bound ? '▶' : '⚿',
+      btnText: bound ? (en ? 'ENTER CONSOLE' : '進入控制台') : (en ? 'LOCKED' : '進入受限'),
+      enter: this.enter,
+
+      // 語言切換
+      setZh: this.setLang('zh'), setEn: this.setLang('en'),
+      zhBtn: en ? langBase : langOn, enBtn: en ? langOn : langBase,
+
+      timeText: this.state.time
+    };
+  }
+}
+</script>
+</body>
+</html>

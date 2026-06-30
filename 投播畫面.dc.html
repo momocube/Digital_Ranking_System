@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="leaderboard-data.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#02040a;overflow:hidden;}
+@keyframes gridPan{from{background-position:0 0,0 0;}to{background-position:48px 48px,48px 48px;}}
+@keyframes breathe{0%,100%{opacity:.32;}50%{opacity:.85;}}
+@keyframes scan{0%{transform:translateY(-200px);}100%{transform:translateY(1960px);}}
+@keyframes pulse{0%,100%{opacity:.45;}50%{opacity:1;}}
+</style>
+</helmet>
+
+<div style="width:100vw;height:100vh;background:#02040a;display:flex;align-items:center;justify-content:center;">
+  <sc-if value="{{ showFs }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;top:clamp(10px,1.8vh,18px);left:clamp(10px,1.5vw,18px);z-index:50;display:flex;gap:8px;">
+      <button onClick="{{ setZh }}" style="{{ zhBtn }}">中文</button>
+      <button onClick="{{ setEn }}" style="{{ enBtn }}">EN</button>
+    </div>
+    <button onClick="{{ enterFs }}" style="position:fixed;top:clamp(10px,1.8vh,18px);right:clamp(10px,1.5vw,18px);z-index:50;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(12px,1.6vh,15px);letter-spacing:3px;color:#7fe6f8;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.5);padding:clamp(7px,1.2vh,10px) clamp(12px,1.6vw,18px);cursor:pointer;">⛶ {{ fsLabel }}</button>
+  </sc-if>
+
+  <div style="{{ stageStyle }}">
+    <div style="position:absolute;inset:-48px;background-image:linear-gradient(rgba(0,229,255,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.10) 1px,transparent 1px);background-size:48px 48px;animation:gridPan 16s linear infinite;"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 90% 38% at 50% 3%,rgba(0,229,255,.17),transparent 70%);animation:breathe 6s ease-in-out infinite;pointer-events:none;"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 32% at 50% 100%,rgba(255,45,149,.16),transparent 70%);pointer-events:none;"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 110% 110% at 50% 50%,transparent 56%,rgba(0,0,0,.55));pointer-events:none;"></div>
+    <div style="position:absolute;left:0;right:0;height:200px;background:linear-gradient(rgba(0,229,255,0),rgba(0,229,255,.08),rgba(0,229,255,0));animation:scan 10s linear infinite;pointer-events:none;"></div>
+
+    <div style="{{ contentStyle }}">
+      <sc-if value="{{ isPortrait }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;border-bottom:1px solid rgba(0,229,255,.2);padding-bottom:34px;">
+          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:20px;letter-spacing:9px;color:#34c8e8;">◢ LIVE RANKING SYSTEM ◣</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <span style="{{ titleMainStyle }}">{{ titleMain }}</span>
+            <span style="{{ titleSubStyle }}">{{ titleSub }}</span>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:18px;background:linear-gradient(90deg,rgba(255,45,149,.16),rgba(0,229,255,.16));border:1.5px solid rgba(0,229,255,.55);box-shadow:0 0 26px rgba(0,229,255,.22),inset 0 0 18px rgba(255,45,149,.12);padding:16px 34px;">
+            <span style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:17px;letter-spacing:5px;color:#ff6bb0;">{{ venueLabel }}</span>
+            <span style="width:1px;height:38px;background:rgba(0,229,255,.4);"></span>
+            <span style="font-family:'Noto Sans TC',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#fff;text-shadow:0 0 18px rgba(0,229,255,.7);">{{ venueName }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;font-family:'Share Tech Mono',monospace;font-size:17px;letter-spacing:2px;color:#5fb6cf;">
+            <span style="display:inline-flex;align-items:center;gap:9px;color:#ff8fc4;"><span style="width:10px;height:10px;border-radius:50%;background:#ff2d95;box-shadow:0 0 10px #ff2d95;animation:pulse 1.6s ease-in-out infinite;"></span>LIVE</span>
+            <span>{{ statusText }}</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isLandscape }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,229,255,.2);padding-bottom:22px;">
+          <div>
+            <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:17px;letter-spacing:7px;color:#34c8e8;">◢ LIVE RANKING SYSTEM</div>
+            <div style="display:flex;align-items:center;gap:22px;margin-top:6px;">
+              <span style="{{ titleMainStyle }}">{{ titleMain }}</span>
+              <span style="{{ titleSubStyle }}">{{ titleSub }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:14px;">
+            <div style="display:inline-flex;align-items:center;gap:16px;background:linear-gradient(90deg,rgba(255,45,149,.16),rgba(0,229,255,.16));border:1.5px solid rgba(0,229,255,.55);box-shadow:0 0 24px rgba(0,229,255,.22),inset 0 0 18px rgba(255,45,149,.12);padding:14px 30px;">
+              <span style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px;letter-spacing:5px;color:#ff6bb0;">{{ venueLabel }}</span>
+              <span style="width:1px;height:34px;background:rgba(0,229,255,.4);"></span>
+              <span style="font-family:'Noto Sans TC',sans-serif;font-weight:900;font-size:38px;line-height:1;color:#fff;text-shadow:0 0 18px rgba(0,229,255,.7);">{{ venueName }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;font-family:'Share Tech Mono',monospace;font-size:16px;letter-spacing:2px;color:#5fb6cf;">
+              <span style="display:inline-flex;align-items:center;gap:9px;color:#ff8fc4;"><span style="width:9px;height:9px;border-radius:50%;background:#ff2d95;box-shadow:0 0 10px #ff2d95;animation:pulse 1.6s ease-in-out infinite;"></span>LIVE</span>
+              <span>{{ statusText }}</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="{{ colHeaderStyle }}">
+        <div style="text-align:center;">{{ lblRank }}</div>
+        <div>{{ lblTeam }}</div>
+        <div style="text-align:center;">{{ lblStage }}</div>
+        <div style="text-align:right;">{{ lblTime }}</div>
+        <div style="text-align:right;">{{ lblScore }}</div>
+      </div>
+
+      <div style="{{ rowsWrapStyle }}">
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+          <div style="{{ r.rowStyle }}">
+            <div style="{{ r.rankStyle }}">{{ r.rankText }}</div>
+            <div style="{{ r.teamStyle }}">{{ r.team }}</div>
+            <div style="{{ r.stageStyle }}">{{ r.stage }}</div>
+            <div style="{{ r.timeStyle }}">{{ r.time }}</div>
+            <div style="{{ r.scoreStyle }}">{{ r.score }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid rgba(0,229,255,.18);font-family:'Share Tech Mono',monospace;font-size:15px;letter-spacing:2px;color:#3f7f93;">
+        <span>&gt; {{ footerLeft }}<span style="color:#34c8e8;">_</span></span>
+        <span style="color:#ff6bb0;">{{ footerRight }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail" data-bg-color="#05070f">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect x="300" y="170" width="600" height="70" rx="6" fill="none" stroke="#00e5ff" stroke-width="8"/>
+    <rect x="300" y="270" width="600" height="70" rx="6" fill="none" stroke="#00e5ff" stroke-width="6" opacity="0.7"/>
+    <rect x="300" y="370" width="600" height="70" rx="6" fill="none" stroke="#ff2d95" stroke-width="6" opacity="0.7"/>
+    <rect x="300" y="470" width="600" height="70" rx="6" fill="none" stroke="#00e5ff" stroke-width="4" opacity="0.4"/>
+    <rect x="300" y="570" width="600" height="70" rx="6" fill="none" stroke="#00e5ff" stroke-width="4" opacity="0.4"/>
+    <text x="600" y="120" text-anchor="middle" fill="#eafdff" font-family="sans-serif" font-weight="900" font-size="72">排行榜</text>
+  </svg>
+</template></x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:1920}}">
+class Component extends DCLogic {
+  state = { payload: null, src: 'cast', lang: 'zh' };
+
+  defaultRows() {
+    return [
+      { teamZh: '霓虹幽靈', teamEn: 'NEON GHOST', stage: '9-4', time: '06:42.18', score: '9,982,400' },
+      { teamZh: '數據風暴', teamEn: 'DATA STORM', stage: '9-2', time: '07:15.40', score: '9,640,210' },
+      { teamZh: '鈦合金狼', teamEn: 'TITAN WOLF', stage: '8-5', time: '07:58.92', score: '9,210,880' },
+      { teamZh: '像素獵手', teamEn: 'PIXEL HUNTER', stage: '8-3', time: '06:33.05', score: '8,870,500' },
+      { teamZh: '暗影協議', teamEn: 'SHADOW PROTOCOL', stage: '8-1', time: '08:02.77', score: '8,540,120' },
+      { teamZh: '電弧核心', teamEn: 'ARC CORE', stage: '7-4', time: '08:44.30', score: '8,120,640' },
+      { teamZh: '故障矩陣', teamEn: 'GLITCH MATRIX', stage: '7-2', time: '07:21.66', score: '7,760,300' },
+      { teamZh: '鉻合金蛇', teamEn: 'CHROME VIPER', stage: '6-5', time: '09:10.12', score: '7,430,890' },
+      { teamZh: '零號終端', teamEn: 'ZERO TERMINAL', stage: '6-3', time: '09:55.48', score: '7,010,250' },
+      { teamZh: '合成之心', teamEn: 'SYNTH HEART', stage: '6-1', time: '08:38.91', score: '6,680,770' }
+    ];
+  }
+  defaultPayload() {
+    return { region: { zh: 'NEON CLASH 2026', en: 'NEON CLASH 2026' }, venue: { zh: '主競技場', en: 'MAIN ARENA' }, orientation: 'portrait', rows: this.defaultRows(), updated: Date.now() };
+  }
+
+  componentDidMount() {
+    let src = 'cast';
+    try {
+      const u = new URL(location.href);
+      src = u.searchParams.get('src') || new URLSearchParams((u.hash || '').replace(/^#/, '')).get('src') || 'cast';
+    } catch (e) {}
+    const key = src === 'preview' ? 'leaderboard_preview' : 'leaderboard_cast';
+    let payload = this.props.cast || null;
+    if (!payload) { try { payload = JSON.parse(localStorage.getItem(key)); } catch (e) {} }
+    if (!payload && window.LB) { payload = Object.assign({ orientation: 'portrait' }, window.LB.current('tpe', 'f480')); }
+    let lang = 'zh';
+    try { lang = localStorage.getItem('leaderboard_lang') || 'zh'; } catch (e) {}
+    this.setState({ payload, src, lang });
+
+    this._onStorage = (e) => {
+      if (e.key === key && e.newValue) { try { this.setState({ payload: JSON.parse(e.newValue) }); } catch (_) {} }
+      if (e.key === 'leaderboard_lang' && e.newValue) { this.setState({ lang: e.newValue }); }
+    };
+    window.addEventListener('storage', this._onStorage);
+    // postMessage channel (works offline / file:// where storage may be blocked)
+    this._onMsg = (e) => {
+      const d = e.data;
+      if (!d || typeof d !== 'object') return;
+      if (d.type === 'cast' && d.payload) this.setState({ payload: d.payload });
+      if (d.type === 'lang' && d.lang) this.setState({ lang: d.lang });
+    };
+    window.addEventListener('message', this._onMsg);
+    try { if (window.opener) window.opener.postMessage({ type: 'ready' }, '*'); } catch (e) {}
+    try { if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'ready' }, '*'); } catch (e) {}
+    // 視窗縮放時觸發重算 scale。優先 forceUpdate，否則用 setState 強制重渲染
+    this._onResize = () => {
+      if (typeof this.forceUpdate === 'function') this.forceUpdate();
+      else this.setState({ _r: Date.now() });
+    };
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('storage', this._onStorage);
+    window.removeEventListener('message', this._onMsg);
+    window.removeEventListener('resize', this._onResize);
+  }
+
+  enterFs = () => {
+    const el = document.documentElement;
+    const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (fn) fn.call(el);
+  };
+  setLang = (l) => () => {
+    try { localStorage.setItem('leaderboard_lang', l); } catch (e) {}
+    this.setState({ lang: l });
+  };
+
+  tier(i) {
+    if (i === 0) return { rankC: '#ffe27a', bL: '#ffd84d', bd: 'rgba(255,216,77,.3)', bg: 'linear-gradient(90deg,rgba(255,216,77,.13),rgba(0,229,255,.02))', teamC: '#ffffff', stageC: '#ffe27a', timeC: '#fff0bf', sh: 'inset 0 0 28px rgba(255,216,77,.08)' };
+    if (i === 1) return { rankC: '#aef4ff', bL: '#7ff0ff', bd: 'rgba(0,229,255,.22)', bg: 'linear-gradient(90deg,rgba(0,229,255,.09),rgba(0,229,255,.015))', teamC: '#eafdff', stageC: '#aef4ff', timeC: '#9fe9ff', sh: 'none' };
+    if (i === 2) return { rankC: '#ff8fd0', bL: '#ff5db4', bd: 'rgba(255,45,149,.22)', bg: 'linear-gradient(90deg,rgba(255,45,149,.08),rgba(0,229,255,.012))', teamC: '#ffeaf6', stageC: '#ff8fd0', timeC: '#9fe9ff', sh: 'none' };
+    return { rankC: '#5f93a8', bL: 'rgba(0,229,255,.28)', bd: 'rgba(0,229,255,.12)', bg: 'linear-gradient(90deg,rgba(0,229,255,.045),rgba(0,229,255,.01))', teamC: '#dff6ff', stageC: '#bfe9f5', timeC: '#8fd6ea', sh: 'none' };
+  }
+
+  renderVals() {
+    const en = this.state.lang === 'en';
+    const P = this.state.payload || this.defaultPayload();
+    const isP = (P.orientation || 'portrait') !== 'landscape';
+    const W = isP ? 1080 : 1920, H = isP ? 1920 : 1080;
+    const cols = isP ? '84px 1.3fr 0.8fr 1.05fr 1.35fr' : '120px 1.1fr 1fr 1.05fr 1.1fr';
+    const gap = isP ? '22px' : '32px';
+    const pad = isP ? '0 26px' : '0 36px';
+    const sz = isP
+      ? { rank: 40, team: en ? 32 : 38, stage: 34, time: 31, score: 36, rankT: 46, teamT: en ? 34 : 40, stageT: 36, timeT: 32, scoreT: 38 }
+      : { rank: 36, team: en ? 30 : 34, stage: 32, time: 30, score: 34, rankT: 42, teamT: en ? 32 : 36, stageT: 34, timeT: 32, scoreT: 36 };
+
+    // 隊名上限 20 字，超過自動截斷（用 … 補尾）
+    const MAX_NAME = 20;
+    const truncate = function (s) {
+      if (s == null) return '';
+      s = String(s);
+      if (s.length <= MAX_NAME) return s;
+      return s.slice(0, MAX_NAME - 1) + '…';
+    };
+
+    const rows = (P.rows || []).slice(0, 10).map((r, i) => {
+      const t = this.tier(i), top = i < 3;
+      const blW = isP ? (top ? '5px' : '4px') : (top ? '4px' : '3px');
+      return {
+        rankText: String(i + 1).padStart(2, '0'),
+        team: truncate(en ? (r.teamEn || r.teamZh) : (r.teamZh || r.teamEn)),
+        stage: r.stage, time: r.time, score: r.score,
+        rowStyle: { display: 'grid', gridTemplateColumns: cols, alignItems: 'center', gap: gap, flex: '1', padding: pad, border: '1px solid ' + t.bd, borderLeft: blW + ' solid ' + t.bL, background: t.bg, boxShadow: t.sh },
+        rankStyle: { fontFamily: 'Orbitron,sans-serif', fontWeight: top ? 900 : 700, fontSize: (top ? sz.rankT : sz.rank) + 'px', color: t.rankC, textAlign: 'center', textShadow: top ? '0 0 14px ' + t.rankC : 'none' },
+        teamStyle: { fontFamily: en ? 'Rajdhani,sans-serif' : "'Noto Sans TC',sans-serif", fontWeight: 700, fontSize: (top ? sz.teamT : sz.team) + 'px', letterSpacing: en ? '1px' : '0', color: t.teamC },
+        stageStyle: { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: (top ? sz.stageT : sz.stage) + 'px', color: t.stageC, textAlign: 'center', textShadow: top ? '0 0 10px ' + t.stageC : 'none' },
+        timeStyle: { fontFamily: "'Share Tech Mono',monospace", fontSize: (top ? sz.timeT : sz.time) + 'px', color: t.timeC, textAlign: 'right' },
+        scoreStyle: { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: (top ? sz.scoreT : sz.score) + 'px', color: '#ff5db4', textAlign: 'right', textShadow: '0 0 12px rgba(255,45,149,.45)' }
+      };
+    });
+
+    const vw = (typeof window !== 'undefined' ? window.innerWidth : W);
+    const vh = (typeof window !== 'undefined' ? window.innerHeight : H);
+    const scale = Math.min(vw / W, vh / H) || 1;
+
+    const d = new Date(P.updated || Date.now());
+    const p2 = (n) => String(n).padStart(2, '0');
+    const updatedText = p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
+    const region = P.region ? (en ? P.region.en : P.region.zh) : '';
+    const venueName = P.venue ? (en ? P.venue.en : P.venue.zh) : '';
+
+    const langFs = 'clamp(11px,1.5vh,14px)';
+    const langPad = 'clamp(6px,1vh,8px) clamp(10px,1.4vw,14px)';
+    const btnBase = { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: langFs, letterSpacing: '2px', padding: langPad, cursor: 'pointer', border: '1px solid rgba(0,229,255,.3)', background: 'rgba(0,0,0,.4)', color: '#5f93a8' };
+    const btnOn = { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: langFs, letterSpacing: '2px', padding: langPad, cursor: 'pointer', border: '1px solid #34c8e8', background: 'rgba(0,229,255,.16)', color: '#eafdff' };
+
+    return {
+      isPortrait: isP, isLandscape: !isP,
+      showFs: this.state.src !== 'preview',
+      enterFs: this.enterFs, fsLabel: en ? 'FULLSCREEN' : '全螢幕',
+      setZh: this.setLang('zh'), setEn: this.setLang('en'),
+      zhBtn: en ? btnBase : btnOn, enBtn: en ? btnOn : btnBase,
+      titleMain: en ? 'LEADERBOARD' : '排行榜',
+      titleMainStyle: en
+        ? { fontFamily: 'Orbitron,sans-serif', fontWeight: 900, fontSize: (isP ? 72 : 56) + 'px', lineHeight: '1', letterSpacing: '4px', color: '#eafdff', textShadow: '0 0 30px rgba(0,229,255,.6),0 0 5px rgba(0,229,255,.9)' }
+        : { fontFamily: "'Noto Sans TC',sans-serif", fontWeight: 900, fontSize: (isP ? 104 : 72) + 'px', lineHeight: isP ? '.95' : '1', color: '#eafdff', textShadow: '0 0 30px rgba(0,229,255,.6),0 0 5px rgba(0,229,255,.9)' },
+      titleSub: en ? 'RANKINGS' : 'LEADERBOARD',
+      titleSubStyle: en
+        ? { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: (isP ? 22 : 20) + 'px', letterSpacing: '7px', color: '#ff2d95', textShadow: '0 0 16px rgba(255,45,149,.6)' }
+        : { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: (isP ? 30 : 26) + 'px', letterSpacing: isP ? '7px' : '6px', color: '#ff2d95', textShadow: '0 0 16px rgba(255,45,149,.6)' },
+      venueLabel: en ? 'FIELD' : '場域',
+      venueName: venueName,
+      statusText: region + ' · ' + (en ? 'UPDATED ' : '更新 ') + updatedText,
+      lblRank: en ? 'RANK' : '排名', lblTeam: en ? 'TEAM' : '隊伍', lblStage: en ? 'STAGE' : '關卡', lblTime: en ? 'TIME' : '破關時間', lblScore: en ? 'SCORE' : '分數',
+      footerLeft: venueName + (en ? ' · AUTO-SYNC' : ' · 自動擷取中'),
+      footerRight: en ? '// 5 SUB-STAGES PER TIER · NEON CLASH RANKING' : '// 每 5 小關晉升一大關 · NEON CLASH RANKING',
+      rows: rows,
+      stageStyle: { position: 'relative', width: W + 'px', height: H + 'px', overflow: 'hidden', background: '#05070f', fontFamily: "'Noto Sans TC',sans-serif", transform: 'scale(' + scale + ')', transformOrigin: 'center center', flex: '0 0 auto' },
+      contentStyle: { position: 'relative', zIndex: 2, height: '100%', padding: isP ? '54px 44px 44px' : '50px 60px 50px', display: 'flex', flexDirection: 'column' },
+      colHeaderStyle: { display: 'grid', gridTemplateColumns: cols, alignItems: 'center', gap: gap, padding: isP ? '22px 26px 14px' : '20px 36px 18px', fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: '18px', letterSpacing: '4px', color: '#4f8aa0' },
+      rowsWrapStyle: { display: 'flex', flexDirection: 'column', gap: isP ? '9px' : '12px', flex: '1' }
+    };
+  }
+}
+</script>
+</body>
+</html>

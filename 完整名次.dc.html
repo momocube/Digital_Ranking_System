@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>完整名次 · NEON CLASH</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="leaderboard-data.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#05070f;}
+@keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+@keyframes gridPan{from{background-position:0 0,0 0;}to{background-position:48px 48px,48px 48px;}}
+select{appearance:none;-webkit-appearance:none;}
+input::placeholder{color:#3f7f93;}
+input:focus{outline:none;border-color:#34c8e8;}
+.row-hover:hover{background:rgba(0,229,255,.04) !important;}
+.team-cell{cursor:pointer;padding:3px 6px;margin:-3px -6px;border-radius:3px;transition:background 0.15s,box-shadow 0.15s;position:relative;}
+.team-cell:hover{background:rgba(0,229,255,.1);box-shadow:inset 0 0 0 1px rgba(0,229,255,.25);}
+.team-cell:hover::after{content:'✎ 雙擊編輯';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:#34c8e8;opacity:0.7;pointer-events:none;}
+.team-edit{width:100%;padding:6px 10px;font-family:'Noto Sans TC',sans-serif;font-weight:700;color:#eafdff;background:#0a1018;border:1px solid #34c8e8;outline:none;box-shadow:0 0 12px rgba(0,229,255,.4);}
+.team-edit:focus{border-color:#7fe6f8;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:rgba(0,229,255,.04);}
+::-webkit-scrollbar-thumb{background:rgba(0,229,255,.3);}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,229,255,.5);}
+</style>
+</helmet>
+
+<div style="height:100vh;max-height:100vh;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(0,229,255,.08),transparent 60%),radial-gradient(ellipse 70% 60% at 100% 100%,rgba(255,45,149,.08),transparent 60%),#05070f;font-family:'Noto Sans TC',sans-serif;padding:clamp(14px,2.5vh,32px) clamp(18px,3vw,40px);display:flex;flex-direction:column;gap:clamp(12px,1.8vh,20px);position:relative;">
+
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,229,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.04) 1px,transparent 1px);background-size:48px 48px;animation:gridPan 20s linear infinite;pointer-events:none;"></div>
+
+  <!-- 標題列 -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid rgba(0,229,255,.2);padding-bottom:clamp(10px,1.5vh,18px);position:relative;z-index:2;flex-shrink:0;">
+    <div>
+      <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.4vh,14px);letter-spacing:clamp(4px,0.8vw,7px);color:#34c8e8;">◢ NEON CLASH · FULL RANKING</div>
+      <div style="display:flex;align-items:baseline;gap:clamp(10px,1.5vw,18px);margin-top:6px;">
+        <span style="{{ titleZhStyle }}">{{ titleZh }}</span>
+        <span style="font-family:Orbitron,sans-serif;font-weight:700;font-size:clamp(13px,1.9vh,18px);letter-spacing:5px;color:#ff2d95;">{{ titleEn }}</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:clamp(8px,1.2vh,12px);">
+      <div style="display:flex;gap:8px;">
+        <button onClick="{{ setZh }}" style="{{ zhBtn }}">中文</button>
+        <button onClick="{{ setEn }}" style="{{ enBtn }}">EN</button>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(10px,1.3vh,13px);letter-spacing:2px;color:#5fb6cf;text-align:right;line-height:1.7;">
+        <div>{{ tAutoSync }}</div>
+        <div style="color:#3f7f93;">{{ tUpdated }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 篩選列 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1.8fr clamp(90px,11vw,130px) clamp(150px,15vw,190px);gap:clamp(8px,1vw,14px);position:relative;z-index:2;flex-shrink:0;">
+    <div style="position:relative;">
+      <label style="position:absolute;top:-9px;left:12px;background:#05070f;padding:0 8px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;color:#4f8aa0;z-index:3;">{{ tStore }}</label>
+      <select value="{{ storeFilter }}" onChange="{{ onStore }}" style="width:100%;padding:clamp(10px,1.5vh,14px) 38px clamp(10px,1.5vh,14px) 16px;font-family:'Noto Sans TC',sans-serif;font-size:clamp(13px,1.7vh,16px);font-weight:700;color:#eafdff;background:#0a1018;border:1px solid rgba(0,229,255,.35);cursor:pointer;">
+        <sc-for list="{{ storeOpts }}" as="o" hint-placeholder-count="4">
+          <option value="{{ o.id }}" style="background:#0a1018;color:#eafdff;">{{ o.label }}</option>
+        </sc-for>
+      </select>
+      <span style="position:absolute;top:0;bottom:0;right:0;width:36px;display:flex;align-items:center;justify-content:center;pointer-events:none;border-left:1px solid rgba(0,229,255,.2);color:#34c8e8;font-size:11px;">▼</span>
+    </div>
+
+    <div style="position:relative;">
+      <label style="position:absolute;top:-9px;left:12px;background:#05070f;padding:0 8px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;color:#4f8aa0;z-index:3;">{{ tVenue }}</label>
+      <select value="{{ venueFilter }}" onChange="{{ onVenue }}" style="width:100%;padding:clamp(10px,1.5vh,14px) 38px clamp(10px,1.5vh,14px) 16px;font-family:'Noto Sans TC',sans-serif;font-size:clamp(13px,1.7vh,16px);font-weight:700;color:#eafdff;background:#0a1018;border:1px solid rgba(255,45,149,.35);cursor:pointer;">
+        <sc-for list="{{ venueOpts }}" as="o" hint-placeholder-count="4">
+          <option value="{{ o.id }}" style="background:#0a1018;color:#eafdff;">{{ o.label }}</option>
+        </sc-for>
+      </select>
+      <span style="position:absolute;top:0;bottom:0;right:0;width:36px;display:flex;align-items:center;justify-content:center;pointer-events:none;border-left:1px solid rgba(255,45,149,.2);color:#ff6bb0;font-size:11px;">▼</span>
+    </div>
+
+    <div style="position:relative;">
+      <label style="position:absolute;top:-9px;left:12px;background:#05070f;padding:0 8px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;color:#4f8aa0;z-index:3;">{{ tSearch }}</label>
+      <input value="{{ search }}" onInput="{{ onSearch }}" placeholder="{{ tSearchPh }}" style="width:100%;padding:clamp(10px,1.5vh,14px) 16px clamp(10px,1.5vh,14px) 42px;font-family:'Noto Sans TC',sans-serif;font-size:clamp(13px,1.7vh,16px);color:#eafdff;background:#0a1018;border:1px solid rgba(0,229,255,.35);" />
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#34c8e8;font-size:16px;pointer-events:none;">⌕</span>
+    </div>
+
+    <button onClick="{{ reset }}" style="padding:clamp(10px,1.5vh,14px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.5vh,14px);letter-spacing:3px;color:#7fe6f8;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.45);cursor:pointer;">{{ tReset }}</button>
+
+    <!-- 排序快捷:排名 / 時間(跟欄位點擊共用同一個 sortBy state) -->
+    <div style="position:relative;display:flex;gap:6px;align-items:stretch;">
+      <label style="position:absolute;top:-9px;left:12px;background:#05070f;padding:0 8px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;color:#4f8aa0;z-index:3;">{{ tSortLabel }}</label>
+      <button onClick="{{ setSortRank }}" style="{{ sortRankBtn }}">{{ tSortRank }}</button>
+      <button onClick="{{ setSortTime }}" style="{{ sortTimeBtn }}">{{ tSortTime }}</button>
+    </div>
+  </div>
+
+  <!-- 表頭(可點擊排序) -->
+  <div style="display:grid;grid-template-columns:60px 1.1fr 0.7fr 1.6fr 0.55fr 0.9fr 1fr;gap:clamp(8px,1.2vw,16px);padding:clamp(8px,1.2vh,12px) clamp(14px,2vw,22px);border:1px solid rgba(0,229,255,.18);background:rgba(0,229,255,.04);font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(10px,1.3vh,12px);letter-spacing:3px;color:#4f8aa0;position:relative;z-index:2;flex-shrink:0;">
+    <div onClick="{{ sortRank }}" style="text-align:center;cursor:pointer;user-select:none;">{{ tLblRank }}{{ arrRank }}</div>
+    <div onClick="{{ sortStore }}" style="cursor:pointer;user-select:none;">{{ tLblStore }}{{ arrStore }}</div>
+    <div onClick="{{ sortVenue }}" style="cursor:pointer;user-select:none;">{{ tLblVenue }}{{ arrVenue }}</div>
+    <div onClick="{{ sortTeam }}" style="cursor:pointer;user-select:none;">{{ tLblTeam }}{{ arrTeam }}</div>
+    <div onClick="{{ sortStage }}" style="text-align:center;cursor:pointer;user-select:none;">{{ tLblStage }}{{ arrStage }}</div>
+    <div onClick="{{ sortTime }}" style="text-align:right;cursor:pointer;user-select:none;">{{ tLblTime }}{{ arrTime }}</div>
+    <div onClick="{{ sortScore }}" style="text-align:right;cursor:pointer;user-select:none;">{{ tLblScore }}{{ arrScore }}</div>
+  </div>
+
+  <!-- 內容列（可滾動） -->
+  <div style="flex:1;overflow-y:auto;border:1px solid rgba(0,229,255,.12);background:rgba(0,0,0,.2);position:relative;z-index:2;min-height:0;">
+    <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="20">
+        <div class="row-hover" style="display:grid;grid-template-columns:60px 1.1fr 0.7fr 1.6fr 0.55fr 0.9fr 1fr;gap:clamp(8px,1.2vw,16px);padding:clamp(10px,1.4vh,13px) clamp(14px,2vw,22px);align-items:center;border-bottom:1px solid rgba(0,229,255,.06);transition:background 0.15s;">
+          <div style="{{ r.rankStyle }}">{{ r.rank }}</div>
+          <div style="font-family:'Noto Sans TC',sans-serif;font-size:clamp(12px,1.6vh,14px);color:#9fe9ff;">{{ r.store }}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(11px,1.5vh,13px);color:#ff8fc4;letter-spacing:1px;">{{ r.venue }}</div>
+          <sc-if value="{{ r.notEditing }}" hint-placeholder-val="{{ true }}">
+            <div onDoubleClick="{{ r.startEdit }}" class="team-cell" style="{{ r.teamStyle }}" title="雙擊編輯">{{ r.team }}</div>
+          </sc-if>
+          <sc-if value="{{ r.isEditing }}" hint-placeholder-val="{{ false }}">
+            <input class="team-edit" value="{{ editValue }}" onInput="{{ onEditChange }}" onKeyDown="{{ onEditKey }}" onBlur="{{ commitEdit }}" maxLength="20" autoFocus />
+          </sc-if>
+          <div style="{{ r.stageStyle }}">{{ r.stage }}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(11px,1.5vh,14px);color:#9fe9ff;text-align:right;">{{ r.time }}</div>
+          <div style="{{ r.scoreStyle }}">{{ r.score }}</div>
+        </div>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:clamp(40px,8vh,80px) 20px;text-align:center;font-family:'Noto Sans TC',sans-serif;color:#5f93a8;">
+        <div style="font-size:clamp(36px,5vh,52px);margin-bottom:14px;opacity:.5;">⌕</div>
+        <div style="font-size:clamp(14px,1.8vh,17px);font-weight:700;color:#7fb6c8;">{{ tEmpty }}</div>
+        <div style="font-size:clamp(11px,1.4vh,13px);margin-top:6px;color:#4f8aa0;">{{ tEmptyHint }}</div>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- 底部資訊 -->
+  <div style="display:flex;justify-content:space-between;align-items:center;font-family:'Share Tech Mono',monospace;font-size:clamp(10px,1.3vh,12px);letter-spacing:2px;color:#3f7f93;position:relative;z-index:2;flex-shrink:0;">
+    <span>&gt; {{ tFooterCount }}<span style="color:#34c8e8;">_</span></span>
+    <span style="color:#ff6bb0;">{{ tFooterRight }}</span>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail" data-bg-color="#05070f">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <text x="120" y="120" fill="#eafdff" font-family="sans-serif" font-weight="900" font-size="56">完整名次</text>
+    <text x="120" y="170" fill="#ff2d95" font-family="sans-serif" font-weight="700" font-size="22" letter-spacing="5">FULL RANKING</text>
+    <rect x="120" y="220" width="200" height="60" rx="4" fill="none" stroke="#00e5ff" stroke-width="3"/>
+    <rect x="340" y="220" width="200" height="60" rx="4" fill="none" stroke="#ff2d95" stroke-width="3"/>
+    <rect x="560" y="220" width="380" height="60" rx="4" fill="none" stroke="#00e5ff" stroke-width="3"/>
+    <rect x="120" y="320" width="960" height="50" rx="4" fill="rgba(0,229,255,0.08)"/>
+    <rect x="120" y="390" width="960" height="46" rx="2" fill="none" stroke="#00e5ff" stroke-width="2" opacity="0.5"/>
+    <rect x="120" y="450" width="960" height="46" rx="2" fill="none" stroke="#00e5ff" stroke-width="2" opacity="0.4"/>
+    <rect x="120" y="510" width="960" height="46" rx="2" fill="none" stroke="#00e5ff" stroke-width="2" opacity="0.3"/>
+    <rect x="120" y="570" width="960" height="46" rx="2" fill="none" stroke="#00e5ff" stroke-width="2" opacity="0.2"/>
+  </svg>
+</template>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { regions: [], storeFilter: 'all', venueFilter: 'all', search: '', lang: 'zh', tick: 0, editing: null, editValue: '', sortBy: 'score', sortDir: 'desc' };
+  // editing: null | { id, storeId, venueId, current }
+  // sortBy: rank | store | venue | team | stage | time | score
+
+  componentDidMount() {
+    const regions = (window.LB ? window.LB.regions() : []);
+    let lang = 'zh';
+    try { lang = localStorage.getItem('leaderboard_lang') || 'zh'; } catch (e) {}
+    this.setState({ regions: regions, lang: lang });
+
+    // 每 8 秒重新拉一次資料（同步控制台的擷取節奏）
+    this._timer = setInterval(() => this.setState({ tick: Date.now() }), 8000);
+
+    // 跟其他分頁同步語言
+    this._onStorage = (e) => {
+      if (e.key === 'leaderboard_lang' && e.newValue) this.setState({ lang: e.newValue });
+    };
+    window.addEventListener('storage', this._onStorage);
+  }
+  componentWillUnmount() {
+    clearInterval(this._timer);
+    window.removeEventListener('storage', this._onStorage);
+  }
+
+  onStore = (e) => this.setState({ storeFilter: e.target.value, venueFilter: 'all' });
+  onVenue = (e) => this.setState({ venueFilter: e.target.value });
+  onSearch = (e) => this.setState({ search: e.target.value });
+  reset = () => this.setState({ storeFilter: 'all', venueFilter: 'all', search: '', sortBy: 'score', sortDir: 'desc' });
+
+  // 點欄位表頭切換排序;再點同一欄則反向
+  toggleSort = (col) => () => {
+    if (this.state.sortBy === col) {
+      this.setState({ sortDir: this.state.sortDir === 'asc' ? 'desc' : 'asc' });
+    } else {
+      // 各欄位的合理預設方向
+      const def = { rank: 'asc', store: 'asc', venue: 'asc', team: 'asc', stage: 'desc', time: 'asc', score: 'desc' };
+      this.setState({ sortBy: col, sortDir: def[col] || 'desc' });
+    }
+  };
+  setLang = (l) => () => {
+    try { localStorage.setItem('leaderboard_lang', l); } catch (e) {}
+    this.setState({ lang: l });
+  };
+
+  // 快捷排序按鈕(跟欄位點擊共用同一個 sortBy / sortDir state)
+  setSortRank = () => this.setState({ sortBy: 'score', sortDir: 'desc' });  // 分數遞減 = 排名 01 → N
+  setSortTime = () => this.setState({ sortBy: 'time',  sortDir: 'asc'  });  // 時間遞增 = 最快在前
+
+  // 雙擊編輯流程(隊伍名稱上限 20 字)
+  startEdit = (info) => () => this.setState({ editing: info, editValue: String(info.current || '').slice(0, 20) });
+  cancelEdit = () => this.setState({ editing: null, editValue: '' });
+  // 即時截斷:就算用貼上、輸入法上字、autofill,只要超過 20 字一律切掉
+  onEditChange = (e) => {
+    const raw = String(e.target.value == null ? '' : e.target.value);
+    const clipped = raw.slice(0, 20);
+    if (clipped !== raw && e.target) { try { e.target.value = clipped; } catch (_) {} }
+    this.setState({ editValue: clipped });
+  };
+  commitEdit = () => {
+    const ed = this.state.editing; if (!ed) return;
+    const name = String(this.state.editValue || '').trim().slice(0, 20);
+    if (!name) { this.cancelEdit(); return; }
+    if (name !== ed.current && window.LB && window.LB.updateTeam) {
+      window.LB.updateTeam(ed.storeId, ed.venueId, ed.id, name);
+      this.syncToCastPreview(ed.storeId, ed.venueId);
+    }
+    this.setState({ editing: null, editValue: '', tick: Date.now() });
+  };
+
+  // 編完即時同步:若目前 cast / preview 顯示的就是這個 store/venue,直接重寫 localStorage,
+  // 投播畫面與控制台預覽 iframe 都會收到 storage event 並立刻更新,不用等控制台下次輪詢
+  syncToCastPreview(storeId, venueId) {
+    if (!window.LB || !window.LB.current) return;
+    const refresh = (key) => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+        const cur = JSON.parse(raw);
+        if (cur && cur._storeId === storeId && cur._venueId === venueId) {
+          const fresh = window.LB.current(storeId, venueId);
+          if (fresh) {
+            fresh._storeId = storeId;
+            fresh._venueId = venueId;
+            fresh.orientation = cur.orientation || 'portrait';
+            fresh.updated = Date.now();
+            localStorage.setItem(key, JSON.stringify(fresh));
+          }
+        }
+      } catch (e) {}
+    };
+    refresh('leaderboard_cast');
+    refresh('leaderboard_preview');
+  }
+  onEditKey = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); this.commitEdit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); this.cancelEdit(); }
+  };
+
+  buildAll() {
+    const { regions, storeFilter, venueFilter, search, sortBy, sortDir, lang } = this.state;
+    if (!window.LB) return [];
+    const en = lang === 'en';
+    const all = [];
+    for (let i = 0; i < regions.length; i++) {
+      const r = regions[i];
+      if (storeFilter !== 'all' && r.id !== storeFilter) continue;
+      for (let j = 0; j < r.venues.length; j++) {
+        const v = r.venues[j];
+        if (venueFilter !== 'all' && v.id !== venueFilter) continue;
+        const data = window.LB.current(r.id, v.id);
+        if (!data) continue;
+        for (let k = 0; k < data.rows.length; k++) {
+          const row = data.rows[k];
+          all.push({
+            id: row._id, storeId: r.id, venueId: v.id,
+            storeZh: r.zh, storeEn: r.en,
+            venueZh: v.zh, venueEn: v.en,
+            teamZh: row.teamZh, teamEn: row.teamEn,
+            stage: row.stage, time: row.time, score: row.score,
+            scoreNum: parseInt(String(row.score).replace(/,/g, ''), 10)
+          });
+        }
+      }
+    }
+    // 關鍵字搜尋(中英隊名 + 中英店家 + 中英場域)
+    const q = (search || '').trim().toLowerCase();
+    let filtered = all;
+    if (q) {
+      filtered = all.filter(function (x) {
+        return (x.teamZh && x.teamZh.toLowerCase().indexOf(q) >= 0)
+            || (x.teamEn && x.teamEn.toLowerCase().indexOf(q) >= 0)
+            || (x.storeZh && x.storeZh.toLowerCase().indexOf(q) >= 0)
+            || (x.storeEn && x.storeEn.toLowerCase().indexOf(q) >= 0)
+            || (x.venueZh && x.venueZh.toLowerCase().indexOf(q) >= 0)
+            || (x.venueEn && x.venueEn.toLowerCase().indexOf(q) >= 0);
+      });
+    }
+    // 第一步:永遠先以分數遞減排出「真正的排名」
+    filtered.sort(function (a, b) { return b.scoreNum - a.scoreNum; });
+    filtered.forEach(function (x, i) { x.rankNum = i + 1; });
+
+    // 第二步:依目前 sortBy / sortDir 重排顯示順序(rank 號永遠是上一步的「真正排名」)
+    const sign = sortDir === 'asc' ? 1 : -1;
+    function stageNum(s) {
+      const m = String(s || '').match(/(\d+)-(\d+)/);
+      if (!m) return 0;
+      return parseInt(m[1], 10) * 10 + parseInt(m[2], 10);
+    }
+    function cmp(a, b) {
+      let av, bv;
+      switch (sortBy) {
+        case 'rank':  av = a.rankNum; bv = b.rankNum; break;
+        case 'store': av = en ? a.storeEn : a.storeZh; bv = en ? b.storeEn : b.storeZh; break;
+        case 'venue': av = en ? a.venueEn : a.venueZh; bv = en ? b.venueEn : b.venueZh; break;
+        case 'team':  av = (en ? a.teamEn : a.teamZh) || ''; bv = (en ? b.teamEn : b.teamZh) || ''; break;
+        case 'stage': av = stageNum(a.stage); bv = stageNum(b.stage); break;
+        case 'time':  av = a.time; bv = b.time; break;
+        case 'score': default: av = a.scoreNum; bv = b.scoreNum;
+      }
+      if (typeof av === 'string') return av.localeCompare(bv) * sign;
+      if (av < bv) return -1 * sign;
+      if (av > bv) return 1 * sign;
+      return 0;
+    }
+    filtered.sort(cmp);
+    return filtered;
+  }
+
+  renderVals() {
+    const en = this.state.lang === 'en';
+    const regions = this.state.regions;
+
+    const sid = this.state.storeFilter;
+    const vid = this.state.venueFilter;
+
+    // 店家下拉選項
+    const storeOpts = [{ id: 'all', label: en ? 'ALL STORES' : '全部店家' }].concat(
+      regions.map(function (r) { return { id: r.id, label: en ? r.en : (r.zh + ' · ' + r.en) }; })
+    );
+    // 場域下拉：選了特定店家就列該店家的，否則列第一家的（每家規格相同）
+    const baseStore = (sid !== 'all')
+      ? regions.filter(function (r) { return r.id === sid; })[0]
+      : regions[0];
+    const venueSrc = baseStore ? baseStore.venues : [];
+    const venueOpts = [{ id: 'all', label: en ? 'ALL FIELDS' : '全部場域' }].concat(
+      venueSrc.map(function (v) { return { id: v.id, label: en ? v.en : (v.zh + ' · ' + v.en) }; })
+    );
+
+    // 計算列
+    const all = this.buildAll();
+    const tierColors = [
+      { r: '#ffe27a', t: '#ffffff' },
+      { r: '#aef4ff', t: '#eafdff' },
+      { r: '#ff8fd0', t: '#ffeaf6' }
+    ];
+    // 隊名上限 20 字，超過自動截斷（用 … 補尾）
+    const MAX_NAME = 20;
+    const truncate = function (s) {
+      if (s == null) return '';
+      s = String(s);
+      if (s.length <= MAX_NAME) return s;
+      return s.slice(0, MAX_NAME - 1) + '…';
+    };
+    const editingId = (this.state.editing && this.state.editing.id) || null;
+    const startEdit = this.startEdit;
+    const rows = all.map(function (x) {
+      const rk = x.rankNum;          // 用真正排名(score 遞減)定金/銀/銅,不隨顯示順序變
+      const top = rk <= 3;
+      const c = top ? tierColors[rk - 1] : { r: '#5f93a8', t: '#dff6ff' };
+      const rawName = en ? (x.teamEn || x.teamZh) : (x.teamZh || x.teamEn);
+      const isEditing = editingId === x.id;
+      return {
+        id: x.id,
+        rank: String(rk).padStart(2, '0'),
+        store: en ? x.storeEn : x.storeZh,
+        venue: en ? x.venueEn : x.venueZh,
+        team: truncate(rawName),
+        stage: x.stage, time: x.time, score: x.score,
+        isEditing: isEditing, notEditing: !isEditing,
+        startEdit: startEdit({ id: x.id, storeId: x.storeId, venueId: x.venueId, current: rawName }),
+        rankStyle: { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: 'clamp(14px,1.9vh,17px)', color: c.r, textAlign: 'center', textShadow: top ? '0 0 10px ' + c.r : 'none' },
+        teamStyle: { fontFamily: en ? 'Rajdhani,sans-serif' : "'Noto Sans TC',sans-serif", fontWeight: 700, fontSize: 'clamp(13px,1.8vh,16px)', color: c.t, letterSpacing: en ? '1px' : '0' },
+        stageStyle: { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: 'clamp(12px,1.6vh,15px)', color: c.r, textAlign: 'center' },
+        scoreStyle: { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: 'clamp(13px,1.8vh,16px)', color: '#ff5db4', textAlign: 'right', textShadow: '0 0 10px rgba(255,45,149,.3)' }
+      };
+    });
+
+    const d = new Date();
+    const p2 = function (n) { return String(n).padStart(2, '0'); };
+    const updatedText = p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
+
+    // 標題用目前篩選範圍描述
+    let titleZh = '全部店家 · 全部場域';
+    let titleEn = 'ALL STORES · ALL FIELDS';
+    if (sid !== 'all') {
+      const sObj = regions.filter(function (r) { return r.id === sid; })[0];
+      if (sObj) {
+        titleZh = sObj.zh;
+        titleEn = sObj.en;
+        if (vid !== 'all') {
+          const vObj = sObj.venues.filter(function (v) { return v.id === vid; })[0];
+          if (vObj) { titleZh += ' · ' + vObj.zh; titleEn += ' · ' + vObj.en; }
+        }
+      }
+    } else if (vid !== 'all') {
+      const vName = venueSrc.filter(function (v) { return v.id === vid; })[0];
+      if (vName) { titleZh = '全部店家 · ' + vName.zh; titleEn = 'ALL STORES · ' + vName.en; }
+    }
+
+    const langBase = { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 'clamp(11px,1.4vh,14px)', letterSpacing: '2px', padding: 'clamp(5px,0.8vh,7px) clamp(10px,1.4vw,16px)', cursor: 'pointer', border: '1px solid rgba(0,229,255,.3)', background: 'rgba(0,0,0,.4)', color: '#5f93a8' };
+    const langOn = { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 'clamp(11px,1.4vh,14px)', letterSpacing: '2px', padding: 'clamp(5px,0.8vh,7px) clamp(10px,1.4vw,16px)', cursor: 'pointer', border: '1px solid #34c8e8', background: 'rgba(0,229,255,.16)', color: '#eafdff' };
+
+    return {
+      titleZh: titleZh, titleEn: titleEn,
+      titleZhStyle: { fontFamily: "'Noto Sans TC',sans-serif", fontWeight: 900, fontSize: 'clamp(22px,3.6vh,36px)', lineHeight: '1', color: '#eafdff', textShadow: '0 0 20px rgba(0,229,255,.5)' },
+      storeFilter: this.state.storeFilter,
+      venueFilter: this.state.venueFilter,
+      search: this.state.search,
+      storeOpts: storeOpts, venueOpts: venueOpts,
+      onStore: this.onStore, onVenue: this.onVenue, onSearch: this.onSearch, reset: this.reset,
+      setZh: this.setLang('zh'), setEn: this.setLang('en'),
+      zhBtn: en ? langBase : langOn, enBtn: en ? langOn : langBase,
+      // 快捷排序按鈕(按到 sortBy 是 score 高亮排名;sortBy 是 time 高亮時間)
+      // 樣式比照篩選列其他按鈕,內外大小齊高,在「清除」按鈕旁邊看起來才整齊
+      setSortRank: this.setSortRank, setSortTime: this.setSortTime,
+      sortRankBtn: this.state.sortBy === 'score'
+        ? { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#eafdff', background: 'rgba(0,229,255,.18)', border: '1px solid #34c8e8', boxShadow: '0 0 14px rgba(0,229,255,.25) inset', cursor: 'pointer' }
+        : { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#5f93a8', background: 'rgba(0,0,0,.3)', border: '1px solid rgba(0,229,255,.25)', cursor: 'pointer' },
+      sortTimeBtn: this.state.sortBy === 'time'
+        ? { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#eafdff', background: 'rgba(255,45,149,.18)', border: '1px solid #ff6bb0', boxShadow: '0 0 14px rgba(255,45,149,.25) inset', cursor: 'pointer' }
+        : { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#5f93a8', background: 'rgba(0,0,0,.3)', border: '1px solid rgba(255,45,149,.25)', cursor: 'pointer' },
+      tSortLabel: en ? 'SORT BY' : '排序方式',
+      tSortRank: en ? 'RANK' : '排名',
+      tSortTime: en ? 'TIME' : '時間',
+      rows: rows,
+      hasRows: rows.length > 0,
+      noRows: rows.length === 0,
+      editValue: this.state.editValue,
+      onEditChange: this.onEditChange,
+      onEditKey: this.onEditKey,
+      commitEdit: this.commitEdit,
+      // 排序綁定:各欄 click handler + 箭頭(▲ asc / ▼ desc / 空字串)
+      sortRank: this.toggleSort('rank'), sortStore: this.toggleSort('store'), sortVenue: this.toggleSort('venue'),
+      sortTeam: this.toggleSort('team'), sortStage: this.toggleSort('stage'), sortTime: this.toggleSort('time'), sortScore: this.toggleSort('score'),
+      arrRank: this.state.sortBy === 'rank' ? (this.state.sortDir === 'asc' ? ' ▲' : ' ▼') : '',
+      arrStore: this.state.sortBy === 'store' ? (this.state.sortDir === 'asc' ? ' ▲' : ' ▼') : '',
+      arrVenue: this.state.sortBy === 'venue' ? (this.state.sortDir === 'asc' ? ' ▲' : ' ▼') : '',
+      arrTeam: this.state.sortBy === 'team' ? (this.state.sortDir === 'asc' ? ' ▲' : ' ▼') : '',
+      arrStage: this.state.sortBy === 'stage' ? (this.state.sortDir === 'asc' ? ' ▲' : ' ▼') : '',
+      arrTime: this.state.sortBy === 'time' ? (this.state.sortDir === 'asc' ? ' ▲' : ' ▼') : '',
+      arrScore: this.state.sortBy === 'score' ? (this.state.sortDir === 'asc' ? ' ▲' : ' ▼') : '',
+      tStore: en ? 'STORE' : '店家',
+      tVenue: en ? 'FIELD' : '場域',
+      tSearch: en ? 'SEARCH' : '搜尋',
+      tSearchPh: en ? 'team / store / field...' : '輸入隊伍 / 店家 / 場域關鍵字…',
+      tReset: en ? 'RESET' : '清除',
+      tAutoSync: en ? '● AUTO-SYNC · every 8s' : '● 自動同步 · 每 8 秒',
+      tUpdated: (en ? '// LAST CHECK ' : '// 最後檢查 ') + updatedText,
+      tLblRank: en ? 'RANK' : '排名',
+      tLblStore: en ? 'STORE' : '店家',
+      tLblVenue: en ? 'FIELD' : '場域',
+      tLblTeam: en ? 'TEAM' : '隊伍',
+      tLblStage: en ? 'STAGE' : '關卡',
+      tLblTime: en ? 'TIME' : '破關時間',
+      tLblScore: en ? 'SCORE' : '分數',
+      tFooterCount: en ? ('SHOWING ' + rows.length + ' ROWS') : ('共 ' + rows.length + ' 筆'),
+      tFooterRight: en ? '// 5 SUB-STAGES PER TIER · NEON CLASH' : '// 每 5 小關晉升一大關 · NEON CLASH',
+      tEmpty: en ? 'NO MATCHING RANKS' : '查無符合條件的名次',
+      tEmptyHint: en ? 'Try clearing filters or change keywords.' : '試試清除篩選或更換關鍵字。'
+    };
+  }
+}
+</script>
+</body>
+</html>
