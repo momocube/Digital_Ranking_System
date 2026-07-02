@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="leaderboard-data.js"></script>
+<meta name="ext-resource-dependency" content="_display_bundled.html" data-resource-id="display" />
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#05070f;}
+@keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+select{appearance:none;-webkit-appearance:none;}
+</style>
+</helmet>
+
+<div style="height:100vh;max-height:100vh;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(0,229,255,.08),transparent 60%),radial-gradient(ellipse 70% 60% at 100% 100%,rgba(255,45,149,.08),transparent 60%),#05070f;font-family:'Noto Sans TC',sans-serif;padding:clamp(14px,2.5vh,36px) clamp(18px,3vw,44px);display:flex;flex-direction:column;gap:clamp(14px,2.2vh,28px);">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,229,255,.2);padding-bottom:clamp(12px,1.8vh,22px);flex-shrink:0;">
+    <div>
+      <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.5vh,15px);letter-spacing:clamp(4px,0.8vw,7px);color:#34c8e8;">◢ NEON CLASH · OPERATIONS</div>
+      <div style="display:flex;align-items:baseline;gap:clamp(10px,1.5vw,18px);margin-top:6px;">
+        <span style="{{ cTitleMainStyle }}">{{ cTitleMain }}</span>
+        <span style="{{ cTitleSubStyle }}">{{ cTitleSub }}</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:clamp(8px,1.2vh,12px);">
+      <div style="display:flex;gap:8px;">
+        <button onClick="{{ setZh }}" style="{{ zhBtn }}">中文</button>
+        <button onClick="{{ setEn }}" style="{{ enBtn }}">EN</button>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(11px,1.4vh,14px);letter-spacing:2px;color:#5fb6cf;text-align:right;line-height:1.7;">
+        <div>{{ tSource }}</div>
+        <div style="color:#3f7f93;">{{ tSourceSub }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:clamp(300px,30vw,440px) 1fr;gap:clamp(16px,2vw,32px);align-items:start;flex:1;min-height:0;overflow:hidden;">
+
+    <div style="display:flex;flex-direction:column;gap:clamp(10px,1.8vh,24px);min-height:0;overflow-y:auto;max-height:100%;">
+
+      <div style="border:1px solid rgba(0,229,255,.18);background:linear-gradient(160deg,rgba(0,229,255,.04),rgba(0,229,255,.01));padding:clamp(14px,2.2vh,26px) clamp(16px,2vw,26px) clamp(16px,2.4vh,28px);">
+        <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.4vh,14px);letter-spacing:clamp(3px,0.6vw,5px);color:#4f8aa0;margin-bottom:clamp(10px,1.5vh,18px);">{{ tStep1 }}</div>
+
+        <label style="font-family:'Noto Sans TC',sans-serif;font-size:clamp(11px,1.4vh,14px);color:#7fb6c8;letter-spacing:1px;">{{ tRegion }}</label>
+        <div style="position:relative;margin:clamp(5px,0.8vh,8px) 0 clamp(12px,1.8vh,18px);">
+          <select value="{{ regionId }}" onChange="{{ onRegion }}" style="width:100%;margin:0;padding:clamp(10px,1.5vh,14px) 46px clamp(10px,1.5vh,14px) 16px;font-family:'Noto Sans TC',sans-serif;font-size:clamp(14px,1.9vh,18px);font-weight:700;color:#eafdff;background:#0a1018;border:1px solid rgba(0,229,255,.4);outline:none;cursor:pointer;">
+            <sc-for list="{{ regionOpts }}" as="rg" hint-placeholder-count="3">
+              <option value="{{ rg.id }}" style="background:#0a1018;color:#eafdff;">{{ rg.label }}</option>
+            </sc-for>
+          </select>
+          <span style="position:absolute;top:0;bottom:0;right:0;width:42px;display:flex;align-items:center;justify-content:center;pointer-events:none;border-left:1px solid rgba(0,229,255,.3);color:#34c8e8;font-size:12px;">▼</span>
+        </div>
+
+        <label style="font-family:'Noto Sans TC',sans-serif;font-size:clamp(11px,1.4vh,14px);color:#7fb6c8;letter-spacing:1px;">{{ tVenue }}</label>
+        <div style="position:relative;margin:clamp(5px,0.8vh,8px) 0 4px;">
+          <select value="{{ venueId }}" onChange="{{ onVenue }}" style="width:100%;margin:0;padding:clamp(10px,1.5vh,14px) 46px clamp(10px,1.5vh,14px) 16px;font-family:'Noto Sans TC',sans-serif;font-size:clamp(14px,1.9vh,18px);font-weight:700;color:#eafdff;background:#0a1018;border:1px solid rgba(255,45,149,.4);outline:none;cursor:pointer;">
+            <sc-for list="{{ venueOpts }}" as="v" hint-placeholder-count="2">
+              <option value="{{ v.id }}" style="background:#0a1018;color:#eafdff;">{{ v.label }}</option>
+            </sc-for>
+          </select>
+          <span style="position:absolute;top:0;bottom:0;right:0;width:42px;display:flex;align-items:center;justify-content:center;pointer-events:none;border-left:1px solid rgba(255,45,149,.3);color:#ff6bb0;font-size:12px;">▼</span>
+        </div>
+      </div>
+
+      <div style="border:1px solid rgba(0,229,255,.18);background:linear-gradient(160deg,rgba(0,229,255,.04),rgba(0,229,255,.01));padding:clamp(14px,2.2vh,26px);">
+        <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.4vh,14px);letter-spacing:clamp(3px,0.6vw,5px);color:#4f8aa0;margin-bottom:clamp(10px,1.4vh,16px);">{{ tStep2 }}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <button onClick="{{ setOrientP }}" style="{{ pBtnStyle }}">{{ tPortrait }}</button>
+          <button onClick="{{ setOrientL }}" style="{{ lBtnStyle }}">{{ tLandscape }}</button>
+        </div>
+      </div>
+
+      <div style="border:1px solid rgba(0,229,255,.18);background:rgba(0,229,255,.02);padding:clamp(12px,1.8vh,22px) clamp(14px,2vw,26px);font-family:'Share Tech Mono',monospace;font-size:clamp(12px,1.6vh,15px);letter-spacing:1px;color:#5fb6cf;display:flex;flex-direction:column;gap:clamp(6px,1vh,10px);">
+        <div style="display:flex;align-items:center;gap:10px;color:#7fe6f8;"><span style="width:9px;height:9px;border-radius:50%;background:#34c8e8;box-shadow:0 0 10px #34c8e8;animation:pulse 1.6s ease-in-out infinite;flex-shrink:0;"></span>{{ tAutoSync }}</div>
+        <div>{{ tLastSync }} <span style="color:#9fe9ff;">{{ updatedText }}</span></div>
+        <sc-if value="{{ casting }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:10px;color:#ff8fc4;"><span style="width:9px;height:9px;border-radius:50%;background:#ff2d95;box-shadow:0 0 10px #ff2d95;animation:pulse 1.2s ease-in-out infinite;flex-shrink:0;"></span>{{ tOnAir }}</div>
+        </sc-if>
+      </div>
+
+      <div style="display:grid;grid-template-columns:clamp(110px,12vw,150px) 1fr;gap:clamp(10px,1.2vw,14px);">
+        <button onClick="{{ refresh }}" style="padding:clamp(12px,1.8vh,18px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(13px,1.7vh,17px);letter-spacing:3px;color:#7fe6f8;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.45);cursor:pointer;">{{ tRefresh }}</button>
+        <button onClick="{{ cast }}" style="padding:clamp(12px,1.8vh,18px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(14px,1.9vh,19px);letter-spacing:clamp(2px,0.5vw,4px);color:#fff;background:linear-gradient(90deg,rgba(255,45,149,.9),rgba(0,229,255,.7));border:none;box-shadow:0 0 24px rgba(255,45,149,.4);cursor:pointer;">{{ tCast }}</button>
+      </div>
+      <button onClick="{{ openFull }}" style="padding:clamp(10px,1.6vh,14px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(12px,1.6vh,15px);letter-spacing:clamp(2px,0.5vw,4px);color:#aef4ff;background:rgba(0,0,0,.3);border:1px solid rgba(0,229,255,.3);cursor:pointer;">{{ tFullRank }}</button>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(10px,1.3vh,13px);letter-spacing:1px;color:#3f7f93;line-height:1.7;margin-top:-8px;">{{ tNote }}</div>
+    </div>
+
+    <div style="border:1px solid rgba(0,229,255,.18);background:rgba(0,0,0,.25);padding:clamp(14px,2vh,24px);display:flex;flex-direction:column;gap:clamp(10px,1.5vh,16px);align-items:center;max-height:100%;min-height:0;overflow:hidden;">
+      <div style="width:100%;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.4vh,14px);letter-spacing:clamp(3px,0.6vw,5px);color:#4f8aa0;">{{ tPreview }}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(10px,1.3vh,13px);letter-spacing:2px;color:#7fe6f8;border:1px solid rgba(0,229,255,.3);padding:5px 12px;">{{ orientTag }}</div>
+      </div>
+      <div style="{{ previewBoxStyle }}">
+        <iframe src="{{ iframeSrc }}" onLoad="{{ onIframeLoad }}" style="width:100%;height:100%;border:none;background:#000;display:block;"></iframe>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<template id="__bundler_thumbnail" data-bg-color="#05070f">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect x="120" y="180" width="430" height="120" rx="8" fill="none" stroke="#00e5ff" stroke-width="8"/>
+    <rect x="120" y="340" width="430" height="120" rx="8" fill="none" stroke="#ff2d95" stroke-width="6"/>
+    <rect x="650" y="180" width="430" height="440" rx="8" fill="none" stroke="#00e5ff" stroke-width="6" opacity="0.6"/>
+    <circle cx="500" cy="540" r="34" fill="#ff2d95"/>
+    <text x="120" y="140" fill="#eafdff" font-family="sans-serif" font-weight="900" font-size="60">投播控制台</text>
+  </svg>
+</template></x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { regions: [], regionId: '', venueId: '', orientation: 'portrait', updated: 0, casting: false, lang: 'zh' };
+
+  componentDidMount() {
+    const regions = (window.LB ? window.LB.regions() : []);
+    const r0 = regions[0];
+    const v0 = r0 && r0.venues[0];
+    let lang = 'zh';
+    try { lang = localStorage.getItem('leaderboard_lang') || 'zh'; } catch (e) {}
+    this.setState({ regions: regions, regionId: r0 ? r0.id : '', venueId: v0 ? v0.id : '', lang: lang }, () => this.pushPreview(false));
+    this._timer = setInterval(() => this.poll(), 8000);
+    this._onStorage = (e) => { if (e.key === 'leaderboard_lang' && e.newValue) this.setState({ lang: e.newValue }); };
+    window.addEventListener('storage', this._onStorage);
+    // a freshly-opened display (cast window / iframe) says 'ready' -> push current state to it
+    this._onMsg = (e) => {
+      if (e.data && e.data.type === 'ready' && e.source) {
+        const p = this.buildPayload(false);
+        if (p) e.source.postMessage({ type: 'cast', payload: p }, '*');
+        e.source.postMessage({ type: 'lang', lang: this.state.lang }, '*');
+      }
+    };
+    window.addEventListener('message', this._onMsg);
+  }
+  componentWillUnmount() { clearInterval(this._timer); window.removeEventListener('storage', this._onStorage); window.removeEventListener('message', this._onMsg); }
+
+  dispBase() { return (window.__resources && window.__resources.display) ? window.__resources.display : '投播畫面.dc.html'; }
+  postAll(p) {
+    try { var ifr = document.querySelector('iframe'); if (ifr && ifr.contentWindow) ifr.contentWindow.postMessage({ type: 'cast', payload: p }, '*'); } catch (e) {}
+    try { if (this._castWin && !this._castWin.closed) this._castWin.postMessage({ type: 'cast', payload: p }, '*'); } catch (e) {}
+  }
+  postLang(l) {
+    try { var ifr = document.querySelector('iframe'); if (ifr && ifr.contentWindow) ifr.contentWindow.postMessage({ type: 'lang', lang: l }, '*'); } catch (e) {}
+    try { if (this._castWin && !this._castWin.closed) this._castWin.postMessage({ type: 'lang', lang: l }, '*'); } catch (e) {}
+  }
+
+  venuesOf(rid) { const r = this.state.regions.filter((x) => x.id === rid)[0]; return r ? r.venues : []; }
+
+  buildPayload(fresh) {
+    if (!window.LB || !this.state.regionId || !this.state.venueId) return null;
+    const d = fresh ? window.LB.capture(this.state.regionId, this.state.venueId) : window.LB.current(this.state.regionId, this.state.venueId);
+    if (!d) return null;
+    return Object.assign({}, d, {
+      orientation: this.state.orientation,
+      updated: Date.now(),
+      _storeId: this.state.regionId,
+      _venueId: this.state.venueId
+    });
+  }
+  write(p) {
+    try {
+      localStorage.setItem('leaderboard_preview', JSON.stringify(p));
+      if (this.state.casting) localStorage.setItem('leaderboard_cast', JSON.stringify(p));
+    } catch (e) {}
+    this.setState({ updated: p.updated });
+    this.postAll(p);
+  }
+  pushPreview(fresh) { const p = this.buildPayload(fresh); if (p) this.write(p); }
+  poll() { this.pushPreview(true); }
+
+  onRegion = (e) => { const id = e.target.value; const vs = this.venuesOf(id); this.setState({ regionId: id, venueId: vs[0] ? vs[0].id : '' }, () => this.pushPreview(false)); };
+  onVenue = (e) => { this.setState({ venueId: e.target.value }, () => this.pushPreview(false)); };
+  setOrientP = () => { this.setState({ orientation: 'portrait' }, () => this.pushPreview(false)); };
+  setOrientL = () => { this.setState({ orientation: 'landscape' }, () => this.pushPreview(false)); };
+  refresh = () => this.pushPreview(true);
+  cast = () => {
+    const p = this.buildPayload(false); if (!p) return;
+    try { localStorage.setItem('leaderboard_cast', JSON.stringify(p)); } catch (e) {}
+    this.setState({ casting: true });
+    this._castWin = window.open(this.dispBase() + '#src=cast', 'neonCastWindow');
+    setTimeout(() => { const q = this.buildPayload(false); if (q) this.postAll(q); this.postLang(this.state.lang); }, 600);
+  };
+  onIframeLoad = () => this.pushPreview(false);
+  setLang = (l) => () => { try { localStorage.setItem('leaderboard_lang', l); } catch (e) {} this.setState({ lang: l }); this.postLang(l); };
+  openFull = () => { try { window.open('./完整名次.dc.html', '_blank'); } catch (e) {} };
+
+  renderVals() {
+    const en = this.state.lang === 'en';
+    const isP = this.state.orientation !== 'landscape';
+    const d = new Date(this.state.updated || Date.now());
+    const p2 = (n) => String(n).padStart(2, '0');
+    const updatedText = this.state.updated ? (p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds())) : '— —';
+
+    const segFs = 'clamp(12px,1.6vh,15px)';
+    const segPad = 'clamp(10px,1.5vh,14px) 0';
+    const segBase = { padding: segPad, fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: segFs, letterSpacing: '2px', cursor: 'pointer', border: '1px solid rgba(0,229,255,.3)', background: 'transparent', color: '#5f93a8' };
+    const segActive = { padding: segPad, fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: segFs, letterSpacing: '2px', cursor: 'pointer', border: '1px solid #34c8e8', background: 'rgba(0,229,255,.14)', color: '#eafdff', boxShadow: '0 0 16px rgba(0,229,255,.25) inset' };
+    const langFs = 'clamp(11px,1.4vh,14px)';
+    const langPad = 'clamp(5px,0.8vh,7px) clamp(10px,1.4vw,16px)';
+    const langBase = { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: langFs, letterSpacing: '2px', padding: langPad, cursor: 'pointer', border: '1px solid rgba(0,229,255,.3)', background: 'rgba(0,0,0,.4)', color: '#5f93a8' };
+    const langOn = { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: langFs, letterSpacing: '2px', padding: langPad, cursor: 'pointer', border: '1px solid #34c8e8', background: 'rgba(0,229,255,.16)', color: '#eafdff' };
+
+    const regionOpts = this.state.regions.map((r) => ({ id: r.id, label: en ? r.en : r.zh }));
+    const venueOpts = this.venuesOf(this.state.regionId).map((v) => ({ id: v.id, label: en ? v.en : (v.zh + ' · ' + v.en) }));
+
+    return {
+      regionOpts: regionOpts, venueOpts: venueOpts,
+      regionId: this.state.regionId, venueId: this.state.venueId,
+      onRegion: this.onRegion, onVenue: this.onVenue,
+      setOrientP: this.setOrientP, setOrientL: this.setOrientL,
+      refresh: this.refresh, cast: this.cast, onIframeLoad: this.onIframeLoad,
+      iframeSrc: this.dispBase() + '#src=preview',
+      setZh: this.setLang('zh'), setEn: this.setLang('en'),
+      zhBtn: en ? langBase : langOn, enBtn: en ? langOn : langBase,
+      casting: this.state.casting, updatedText: updatedText,
+      pBtnStyle: isP ? segActive : segBase, lBtnStyle: isP ? segBase : segActive,
+      openFull: this.openFull,
+      tFullRank: en ? '⊞ FULL RANKING (新分頁)' : '⊞ 完整名次（新分頁）',
+      previewBoxStyle: isP
+        ? { aspectRatio: '9 / 16', height: 'min(676px, 68vh)', maxWidth: '100%', background: '#000', border: '1px solid rgba(0,229,255,.25)', overflow: 'hidden' }
+        : { aspectRatio: '16 / 9', width: 'min(760px, 100%)', maxHeight: '68vh', background: '#000', border: '1px solid rgba(0,229,255,.25)', overflow: 'hidden' },
+      cTitleMain: en ? 'CASTING CONSOLE' : '投播控制台',
+      cTitleMainStyle: en
+        ? { fontFamily: 'Orbitron,sans-serif', fontWeight: 900, fontSize: 'clamp(20px,3.5vh,30px)', letterSpacing: 'clamp(2px,0.4vw,4px)', lineHeight: '1', color: '#eafdff', textShadow: '0 0 20px rgba(0,229,255,.5)' }
+        : { fontFamily: "'Noto Sans TC',sans-serif", fontWeight: 900, fontSize: 'clamp(26px,4.5vh,42px)', lineHeight: '1', color: '#eafdff', textShadow: '0 0 20px rgba(0,229,255,.5)' },
+      cTitleSub: en ? 'OPERATIONS' : 'CASTING CONSOLE',
+      cTitleSubStyle: { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: 'clamp(13px,2vh,18px)', letterSpacing: 'clamp(3px,0.6vw,5px)', color: '#ff2d95' },
+      tSource: en ? 'SOURCE: Game DB (sample)' : '資料來源:遊戲包資料庫(內建範例)',
+      tSourceSub: en ? '// swap to file / path / API later' : '// 之後可換接檔案 / 路徑 / API',
+      tStep1: en ? '① SELECT STORE · FIELD' : '① 選擇店家 · 場域',
+      tRegion: en ? 'STORE' : '店家 STORE',
+      tVenue: en ? 'FIELD' : '場域 FIELD',
+      tStep2: en ? '② CAST ORIENTATION' : '② 投播方向',
+      tPortrait: en ? 'PORTRAIT 1080×1920' : '直式 1080×1920',
+      tLandscape: en ? 'LANDSCAPE 1920×1080' : '橫式 1920×1080',
+      tAutoSync: en ? 'AUTO-SYNC · every 8s from game DB' : '自動擷取中 · 每 8 秒從遊戲包讀取',
+      tLastSync: en ? 'LAST SYNC' : '最後更新 LAST SYNC',
+      tOnAir: en ? 'ON AIR' : '投播中 · ON AIR',
+      tRefresh: en ? '⟳ REFRESH' : '⟳ 重新整理',
+      tCast: en ? '▶ CAST' : '▶ 投播畫面 CAST',
+      tNote: en ? '> Casting opens a new window — drag it to the 2nd screen, then click "Fullscreen" top-right.' : '> 投播會另開一個視窗 — 將它拖到第二螢幕後,點視窗右上「全螢幕」即可。',
+      tPreview: en ? 'LIVE PREVIEW' : '即時預覽 LIVE PREVIEW',
+      orientTag: isP ? (en ? 'PORTRAIT' : '直式 PORTRAIT') : (en ? 'LANDSCAPE' : '橫式 LANDSCAPE')
+    };
+  }
+}
+</script>
+</body>
+</html>
