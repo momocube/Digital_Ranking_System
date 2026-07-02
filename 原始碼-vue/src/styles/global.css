@@ -1,0 +1,68 @@
+/* 全站基本樣式 + 賽博龐克動畫關鍵幀 */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  background: #05070f;
+  overflow: hidden;
+  font-family: 'Noto Sans TC', sans-serif;
+  color: #eafdff;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* 共用動畫 */
+@keyframes gridPan {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 48px 48px, 48px 48px; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+@keyframes pulseRed {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes scan {
+  0% { transform: translateY(-220px); }
+  100% { transform: translateY(120vh); }
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.32; }
+  50% { opacity: 0.7; }
+}
+@keyframes titleGlow {
+  0%, 100% { text-shadow: 0 0 22px rgba(0, 229, 255, 0.45); }
+  50% { text-shadow: 0 0 36px rgba(0, 229, 255, 0.75); }
+}
+
+/* 捲軸樣式(統一整站) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 229, 255, 0.04);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.3);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 255, 0.5);
+}
