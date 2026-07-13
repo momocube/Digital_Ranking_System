@@ -116,6 +116,27 @@
     return { region: { zh: f.rg.zh, en: f.rg.en }, venue: { zh: f.v.zh, en: f.v.en }, rows: rows, updated: Date.now() };
   }
 
+  // ---- 人數版本 + 期間榜(季度/年度)擴充 ----
+  var VERSIONS = [
+    { id: 'v23', zh: '2-3 人', en: '2-3P' },
+    { id: 'v45', zh: '4-5 人', en: '4-5P' },
+    { id: 'v6',  zh: '6 人以上', en: '6P+' }
+  ];
+  function verIndex(vid) { for (var i = 0; i < VERSIONS.length; i++) { if (VERSIONS[i].id === vid) return i; } return 0; }
+  // 期間短標籤(給投播畫面徽章用)
+  var PERIOD_TAG = {
+    live:    { zh: '即時', en: 'LIVE' },
+    quarter: { zh: '季度', en: 'QUARTER' },
+    annual:  { zh: '年度', en: 'ANNUAL' }
+  };
+  // 期別文字(2026 第 3 季 / 2026 年度)
+  function periodTitle(period) {
+    var now = new Date(), y = now.getFullYear();
+    if (period === 'quarter') { var q = Math.floor(now.getMonth() / 3) + 1; return { zh: y + ' 第 ' + q + ' 季', en: y + ' Q' + q }; }
+    if (period === 'annual') { return { zh: y + ' 年度總榜', en: y + ' SEASON' }; }
+    return { zh: '即時更新', en: 'LIVE' };
+  }
+
   window.LB = {
     regions: function () {
       return META.map(function (s) {
@@ -148,6 +169,42 @@
       // TODO 雲端同步占位:
       // fetch('/api/leaderboard/team', { method:'PATCH', body: JSON.stringify({ rid:rid, vid:vid, teamId:teamId, name:name }) });
       return true;
+    },
+
+    // 回傳人數版本清單
+    versions: function () {
+      return VERSIONS.map(function (v) { return { id: v.id, zh: v.zh, en: v.en }; });
+    },
+
+    /* board — 取某店家 × 場域 × 人數版本 × 期間 的排行榜。
+       period: 'live' | 'quarter' | 'annual'(預設 live)。
+       輸出沿用即時榜格式,另附 version / period / periodTag / periodTitle 供投播畫面顯示。
+       live 直接用目前即時資料;quarter / annual 以版本+期間各自的種子產生不同名次,
+       年度分數較高(全年累積感)、季度略低。真接資料時把這裡換成讀 DB 即可。 */
+    board: function (rid, vid, verId, period) {
+      period = period || 'live';
+      var f = find(rid, vid); if (!f.v) return null;
+      var vi = verIndex(verId), ver = VERSIONS[vi];
+      var rows;
+      if (period === 'live') {
+        rows = format(STORE[rid + '/' + vid]);
+      } else {
+        var offset = (period === 'quarter' ? 700 : 1300) + vi * 37;
+        var scale = period === 'annual' ? 1.18 : 0.86;
+        var st = buildState(f.rg._pool, f.v._seed + offset);
+        st.forEach(function (r) { r.score = Math.max(50000, Math.round(r.score * scale)); });
+        rows = format(st);
+      }
+      return {
+        region: { zh: f.rg.zh, en: f.rg.en },
+        venue: { zh: f.v.zh, en: f.v.en },
+        version: { id: ver.id, zh: ver.zh, en: ver.en },
+        period: period,
+        periodTag: PERIOD_TAG[period] || PERIOD_TAG.live,
+        periodTitle: periodTitle(period),
+        rows: rows,
+        updated: Date.now()
+      };
     }
   };
 })();

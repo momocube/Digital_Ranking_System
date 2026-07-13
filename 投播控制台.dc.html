@@ -69,6 +69,7 @@ select{appearance:none;-webkit-appearance:none;}
           </select>
           <span style="position:absolute;top:0;bottom:0;right:0;width:42px;display:flex;align-items:center;justify-content:center;pointer-events:none;border-left:1px solid rgba(255,45,149,.3);color:#ff6bb0;font-size:12px;">▼</span>
         </div>
+
       </div>
 
       <div style="border:1px solid rgba(0,229,255,.18);background:linear-gradient(160deg,rgba(0,229,255,.04),rgba(0,229,255,.01));padding:clamp(14px,2.2vh,26px);">
@@ -79,6 +80,22 @@ select{appearance:none;-webkit-appearance:none;}
         </div>
       </div>
 
+      <div style="border:1px solid rgba(0,229,255,.18);background:linear-gradient(160deg,rgba(0,229,255,.04),rgba(0,229,255,.01));padding:clamp(14px,2.2vh,26px);">
+        <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.4vh,14px);letter-spacing:clamp(3px,0.6vw,5px);color:#4f8aa0;margin-bottom:clamp(10px,1.4vh,16px);">{{ tStep3 }}</div>
+        <div style="display:flex;flex-direction:column;gap:clamp(8px,1.2vh,12px);">
+          <button onClick="{{ toggleQuarter }}" style="{{ qBtnStyle }}"><span style="{{ boxStyle }}">{{ qBox }}</span>{{ tQuarter }}</button>
+          <button onClick="{{ toggleAnnual }}" style="{{ aBtnStyle }}"><span style="{{ boxStyle }}">{{ aBox }}</span>{{ tAnnual }}</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:clamp(12px,1.8vh,16px);">
+          <label style="font-family:'Noto Sans TC',sans-serif;font-size:clamp(12px,1.5vh,14px);color:#7fb6c8;letter-spacing:1px;">{{ tRotateSecLabel }}</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" min="2" max="120" value="{{ rotateSec }}" onInput="{{ onRotateSec }}" style="width:78px;padding:clamp(8px,1.2vh,11px) 10px;font-family:'Share Tech Mono',monospace;font-size:clamp(14px,1.8vh,17px);font-weight:700;text-align:center;color:#eafdff;background:#0a1018;border:1px solid rgba(0,229,255,.4);outline:none;" />
+            <span style="font-family:'Share Tech Mono',monospace;font-size:clamp(11px,1.4vh,13px);letter-spacing:1px;color:#5fb6cf;">{{ tSecUnit }}</span>
+          </div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(10px,1.3vh,13px);letter-spacing:1px;color:#3f7f93;line-height:1.7;margin-top:clamp(8px,1.2vh,12px);">{{ tRotateNote }}</div>
+      </div>
+
       <div style="border:1px solid rgba(0,229,255,.18);background:rgba(0,229,255,.02);padding:clamp(12px,1.8vh,22px) clamp(14px,2vw,26px);font-family:'Share Tech Mono',monospace;font-size:clamp(12px,1.6vh,15px);letter-spacing:1px;color:#5fb6cf;display:flex;flex-direction:column;gap:clamp(6px,1vh,10px);">
         <div style="display:flex;align-items:center;gap:10px;color:#7fe6f8;"><span style="width:9px;height:9px;border-radius:50%;background:#34c8e8;box-shadow:0 0 10px #34c8e8;animation:pulse 1.6s ease-in-out infinite;flex-shrink:0;"></span>{{ tAutoSync }}</div>
         <div>{{ tLastSync }} <span style="color:#9fe9ff;">{{ updatedText }}</span></div>
@@ -87,10 +104,7 @@ select{appearance:none;-webkit-appearance:none;}
         </sc-if>
       </div>
 
-      <div style="display:grid;grid-template-columns:clamp(110px,12vw,150px) 1fr;gap:clamp(10px,1.2vw,14px);">
-        <button onClick="{{ refresh }}" style="padding:clamp(12px,1.8vh,18px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(13px,1.7vh,17px);letter-spacing:3px;color:#7fe6f8;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.45);cursor:pointer;">{{ tRefresh }}</button>
-        <button onClick="{{ cast }}" style="padding:clamp(12px,1.8vh,18px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(14px,1.9vh,19px);letter-spacing:clamp(2px,0.5vw,4px);color:#fff;background:linear-gradient(90deg,rgba(255,45,149,.9),rgba(0,229,255,.7));border:none;box-shadow:0 0 24px rgba(255,45,149,.4);cursor:pointer;">{{ tCast }}</button>
-      </div>
+      <button onClick="{{ refresh }}" style="width:100%;padding:clamp(12px,1.8vh,18px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(13px,1.7vh,17px);letter-spacing:3px;color:#7fe6f8;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.45);cursor:pointer;">{{ tRefresh }}</button>
       <button onClick="{{ openFull }}" style="padding:clamp(10px,1.6vh,14px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(12px,1.6vh,15px);letter-spacing:clamp(2px,0.5vw,4px);color:#aef4ff;background:rgba(0,0,0,.3);border:1px solid rgba(0,229,255,.3);cursor:pointer;">{{ tFullRank }}</button>
       <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(10px,1.3vh,13px);letter-spacing:1px;color:#3f7f93;line-height:1.7;margin-top:-8px;">{{ tNote }}</div>
     </div>
@@ -119,15 +133,16 @@ select{appearance:none;-webkit-appearance:none;}
 </template></x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { regions: [], regionId: '', venueId: '', orientation: 'portrait', updated: 0, casting: false, lang: 'zh' };
+  state = { regions: [], regionId: '', venueId: '', versionId: '', orientation: 'portrait', updated: 0, casting: true, lang: 'zh', incQuarter: false, incAnnual: false, rotateSec: 8 };
 
   componentDidMount() {
     const regions = (window.LB ? window.LB.regions() : []);
     const r0 = regions[0];
     const v0 = r0 && r0.venues[0];
+    const vers = (window.LB ? window.LB.versions() : []);
     let lang = 'zh';
     try { lang = localStorage.getItem('leaderboard_lang') || 'zh'; } catch (e) {}
-    this.setState({ regions: regions, regionId: r0 ? r0.id : '', venueId: v0 ? v0.id : '', lang: lang }, () => this.pushPreview(false));
+    this.setState({ regions: regions, regionId: r0 ? r0.id : '', venueId: v0 ? v0.id : '', versionId: vers[0] ? vers[0].id : 'v23', lang: lang }, () => this.pushPreview(false));
     this._timer = setInterval(() => this.poll(), 8000);
     this._onStorage = (e) => { if (e.key === 'leaderboard_lang' && e.newValue) this.setState({ lang: e.newValue }); };
     window.addEventListener('storage', this._onStorage);
@@ -157,14 +172,24 @@ class Component extends DCLogic {
 
   buildPayload(fresh) {
     if (!window.LB || !this.state.regionId || !this.state.venueId) return null;
-    const d = fresh ? window.LB.capture(this.state.regionId, this.state.venueId) : window.LB.current(this.state.regionId, this.state.venueId);
-    if (!d) return null;
-    return Object.assign({}, d, {
+    const sid = this.state.regionId, vid = this.state.venueId, verId = this.state.versionId;
+    if (fresh) window.LB.capture(sid, vid);              // 先更新即時榜分數
+    const live = window.LB.board(sid, vid, verId, 'live');
+    if (!live) return null;
+    const boards = [live];
+    if (this.state.incQuarter) { const q = window.LB.board(sid, vid, verId, 'quarter'); if (q) boards.push(q); }
+    if (this.state.incAnnual)  { const a = window.LB.board(sid, vid, verId, 'annual');  if (a) boards.push(a); }
+    return {
+      boards: boards,
+      rotateMs: (function (s) { s = parseInt(s, 10); if (!(s > 0)) s = 8; return Math.max(2, Math.min(120, s)) * 1000; })(this.state.rotateSec),
       orientation: this.state.orientation,
       updated: Date.now(),
-      _storeId: this.state.regionId,
-      _venueId: this.state.venueId
-    });
+      _storeId: sid, _venueId: vid, _versionId: verId,
+      // 向後相容:頂層放第一張 board 的欄位
+      region: live.region, venue: live.venue, version: live.version,
+      period: live.period, periodTag: live.periodTag, periodTitle: live.periodTitle,
+      rows: live.rows
+    };
   }
   write(p) {
     try {
@@ -179,6 +204,9 @@ class Component extends DCLogic {
 
   onRegion = (e) => { const id = e.target.value; const vs = this.venuesOf(id); this.setState({ regionId: id, venueId: vs[0] ? vs[0].id : '' }, () => this.pushPreview(false)); };
   onVenue = (e) => { this.setState({ venueId: e.target.value }, () => this.pushPreview(false)); };
+  toggleQuarter = () => { this.setState({ incQuarter: !this.state.incQuarter }, () => this.pushPreview(false)); };
+  toggleAnnual = () => { this.setState({ incAnnual: !this.state.incAnnual }, () => this.pushPreview(false)); };
+  onRotateSec = (e) => { const raw = e.target.value; this.setState({ rotateSec: raw === '' ? '' : (parseInt(raw, 10) || '') }, () => this.pushPreview(false)); };
   setOrientP = () => { this.setState({ orientation: 'portrait' }, () => this.pushPreview(false)); };
   setOrientL = () => { this.setState({ orientation: 'landscape' }, () => this.pushPreview(false)); };
   refresh = () => this.pushPreview(true);
@@ -204,6 +232,8 @@ class Component extends DCLogic {
     const segPad = 'clamp(10px,1.5vh,14px) 0';
     const segBase = { padding: segPad, fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: segFs, letterSpacing: '2px', cursor: 'pointer', border: '1px solid rgba(0,229,255,.3)', background: 'transparent', color: '#5f93a8' };
     const segActive = { padding: segPad, fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: segFs, letterSpacing: '2px', cursor: 'pointer', border: '1px solid #34c8e8', background: 'rgba(0,229,255,.14)', color: '#eafdff', boxShadow: '0 0 16px rgba(0,229,255,.25) inset' };
+    const chkBase = { display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: 'clamp(10px,1.5vh,14px) clamp(14px,1.6vw,18px)', fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 'clamp(13px,1.7vh,16px)', letterSpacing: '2px', cursor: 'pointer', textAlign: 'left', border: '1px solid rgba(0,229,255,.3)', background: 'transparent', color: '#5f93a8' };
+    const chkOn = Object.assign({}, chkBase, { border: '1px solid #34c8e8', background: 'rgba(0,229,255,.12)', color: '#eafdff', boxShadow: '0 0 16px rgba(0,229,255,.2) inset' });
     const langFs = 'clamp(11px,1.4vh,14px)';
     const langPad = 'clamp(5px,0.8vh,7px) clamp(10px,1.4vw,16px)';
     const langBase = { fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: langFs, letterSpacing: '2px', padding: langPad, cursor: 'pointer', border: '1px solid rgba(0,229,255,.3)', background: 'rgba(0,0,0,.4)', color: '#5f93a8' };
@@ -225,6 +255,19 @@ class Component extends DCLogic {
       pBtnStyle: isP ? segActive : segBase, lBtnStyle: isP ? segBase : segActive,
       openFull: this.openFull,
       tFullRank: en ? '⊞ FULL RANKING (新分頁)' : '⊞ 完整名次（新分頁）',
+      toggleQuarter: this.toggleQuarter, toggleAnnual: this.toggleAnnual,
+      qBtnStyle: this.state.incQuarter ? chkOn : chkBase,
+      aBtnStyle: this.state.incAnnual ? chkOn : chkBase,
+      boxStyle: { fontFamily: "'Share Tech Mono',monospace", fontSize: 'clamp(15px,2vh,18px)', lineHeight: '1' },
+      qBox: this.state.incQuarter ? '☑' : '☐',
+      aBox: this.state.incAnnual ? '☑' : '☐',
+      tStep3: en ? '③ PERIOD ROTATION' : '③ 期間輪播',
+      tQuarter: en ? 'Quarterly board' : '季度排行榜',
+      tAnnual: en ? 'Annual board' : '年度總榜',
+      rotateSec: this.state.rotateSec, onRotateSec: this.onRotateSec,
+      tRotateSecLabel: en ? 'ROTATE INTERVAL' : '輪播間隔',
+      tSecUnit: en ? 'sec' : '秒',
+      tRotateNote: en ? '> Live always shown. Checked periods auto-rotate at the interval above (2-120s).' : '> 即時榜一定會播;勾選的期間會依上方秒數自動輪播(可設 2~120 秒)。',
       previewBoxStyle: isP
         ? { aspectRatio: '9 / 16', height: 'min(676px, 68vh)', maxWidth: '100%', background: '#000', border: '1px solid rgba(0,229,255,.25)', overflow: 'hidden' }
         : { aspectRatio: '16 / 9', width: 'min(760px, 100%)', maxHeight: '68vh', background: '#000', border: '1px solid rgba(0,229,255,.25)', overflow: 'hidden' },
@@ -244,10 +287,10 @@ class Component extends DCLogic {
       tLandscape: en ? 'LANDSCAPE 1920×1080' : '橫式 1920×1080',
       tAutoSync: en ? 'AUTO-SYNC · every 8s from game DB' : '自動擷取中 · 每 8 秒從遊戲包讀取',
       tLastSync: en ? 'LAST SYNC' : '最後更新 LAST SYNC',
-      tOnAir: en ? 'ON AIR' : '投播中 · ON AIR',
+      tOnAir: en ? 'AUTO-PUBLISHING · ON AIR' : '自動投播發布中 · ON AIR',
       tRefresh: en ? '⟳ REFRESH' : '⟳ 重新整理',
       tCast: en ? '▶ CAST' : '▶ 投播畫面 CAST',
-      tNote: en ? '> Casting opens a new window — drag it to the 2nd screen, then click "Fullscreen" top-right.' : '> 投播會另開一個視窗 — 將它拖到第二螢幕後,點視窗右上「全螢幕」即可。',
+      tNote: en ? '> This console auto-publishes to the cast channel. Open the cast screen from the Home page, drag to the 2nd screen, then click "Fullscreen".' : '> 本頁設定會自動發布到投播頻道;投播畫面請從「主頁」開啟,拖到第二螢幕後點右上「全螢幕」。',
       tPreview: en ? 'LIVE PREVIEW' : '即時預覽 LIVE PREVIEW',
       orientTag: isP ? (en ? 'PORTRAIT' : '直式 PORTRAIT') : (en ? 'LANDSCAPE' : '橫式 LANDSCAPE')
     };

@@ -48,7 +48,8 @@ input:focus{outline:none;border-color:#34c8e8;}
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:clamp(8px,1.2vh,12px);">
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onClick="{{ toConsole }}" style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.4vh,14px);letter-spacing:2px;padding:clamp(5px,0.8vh,7px) clamp(12px,1.6vw,18px);cursor:pointer;color:#fff;background:linear-gradient(90deg,rgba(255,45,149,.85),rgba(0,229,255,.7));border:none;box-shadow:0 0 16px rgba(255,45,149,.35);">{{ tToConsole }}</button>
         <button onClick="{{ setZh }}" style="{{ zhBtn }}">中文</button>
         <button onClick="{{ setEn }}" style="{{ enBtn }}">EN</button>
       </div>
@@ -205,6 +206,8 @@ class Component extends DCLogic {
     try { localStorage.setItem('leaderboard_lang', l); } catch (e) {}
     this.setState({ lang: l });
   };
+
+  toConsole = () => { window.location.href = './投播控制台.dc.html'; };
 
   // 快捷排序按鈕(跟欄位點擊共用同一個 sortBy / sortDir state)
   setSortRank = () => this.setState({ sortBy: 'score', sortDir: 'desc' });  // 分數遞減 = 排名 01 → N
@@ -424,6 +427,8 @@ class Component extends DCLogic {
       onStore: this.onStore, onVenue: this.onVenue, onSearch: this.onSearch, reset: this.reset,
       setZh: this.setLang('zh'), setEn: this.setLang('en'),
       zhBtn: en ? langBase : langOn, enBtn: en ? langOn : langBase,
+      toConsole: this.toConsole,
+      tToConsole: en ? '⚙ CONSOLE' : '⚙ 切換到主控台',
       // 快捷排序按鈕(按到 sortBy 是 score 高亮排名;sortBy 是 time 高亮時間)
       // 樣式比照篩選列其他按鈕,內外大小齊高,在「清除」按鈕旁邊看起來才整齊
       setSortRank: this.setSortRank, setSortTime: this.setSortTime,

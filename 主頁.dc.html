@@ -25,6 +25,27 @@ html,body{height:100%;background:#05070f;overflow:hidden;}
 
 <div style="width:100vw;height:100vh;position:relative;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(0,229,255,.08),transparent 60%),radial-gradient(ellipse 70% 60% at 100% 100%,rgba(255,45,149,.08),transparent 60%),#05070f;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans TC',sans-serif;">
 
+  <!-- 密碼視窗 -->
+  <sc-if value="{{ askPwd }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:9999;background:rgba(2,4,10,.82);display:flex;align-items:center;justify-content:center;">
+      <div style="position:relative;width:min(420px,90vw);border:1px solid rgba(0,229,255,.35);background:linear-gradient(160deg,rgba(10,16,24,.98),rgba(5,10,18,.98));box-shadow:0 0 40px rgba(0,229,255,.18),inset 0 0 30px rgba(0,229,255,.03);padding:clamp(26px,4.5vh,40px) clamp(22px,4vw,36px);display:flex;flex-direction:column;gap:clamp(13px,2.2vh,18px);align-items:center;text-align:center;">
+        <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(11px,1.5vh,14px);letter-spacing:clamp(4px,0.9vw,7px);color:#34c8e8;">◢ ACCESS REQUIRED ◣</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(40px,6vh,56px);line-height:1;color:#34c8e8;text-shadow:0 0 22px rgba(0,229,255,.6);">⚿</div>
+        <div style="font-family:'Noto Sans TC',sans-serif;font-weight:900;font-size:clamp(19px,3.2vh,28px);color:#eafdff;text-shadow:0 0 18px rgba(0,229,255,.5);">{{ tLockTitle }}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(11px,1.5vh,13px);letter-spacing:1px;color:#5fb6cf;line-height:1.6;">{{ tLockSub }}</div>
+        <input type="password" value="{{ pwd }}" onInput="{{ onPwd }}" onKeyDown="{{ onPwdKey }}" placeholder="{{ tPwdPh }}" style="width:100%;margin-top:4px;padding:clamp(12px,1.8vh,16px) 18px;font-family:'Share Tech Mono',monospace;font-size:clamp(15px,2vh,18px);letter-spacing:3px;color:#eafdff;background:#0a1018;border:1px solid rgba(0,229,255,.4);outline:none;text-align:center;" />
+        <sc-if value="{{ pwdErr }}" hint-placeholder-val="{{ false }}">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(10px,1.4vh,12px);letter-spacing:1px;color:#ff6680;">{{ tPwdErr }}</div>
+        </sc-if>
+        <div style="display:flex;gap:10px;width:100%;margin-top:2px;">
+          <button onClick="{{ closePwd }}" style="flex:0 0 34%;padding:clamp(11px,1.8vh,16px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(13px,1.8vh,16px);letter-spacing:2px;color:#7fb6c8;background:rgba(0,0,0,.35);border:1px solid rgba(0,229,255,.3);cursor:pointer;">{{ tCancel }}</button>
+          <button onClick="{{ submitPwd }}" style="flex:1;padding:clamp(11px,1.8vh,16px) 0;font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(14px,2vh,18px);letter-spacing:clamp(2px,0.6vw,5px);color:#fff;background:linear-gradient(90deg,rgba(255,45,149,.9),rgba(0,229,255,.8));border:none;box-shadow:0 0 26px rgba(255,45,149,.4);cursor:pointer;">{{ tUnlock }}</button>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(9px,1.2vh,11px);letter-spacing:1px;color:#3f7f93;">{{ tPwdHint }}</div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- 背景網格 -->
   <div style="position:absolute;inset:-48px;background-image:linear-gradient(rgba(0,229,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.07) 1px,transparent 1px);background-size:48px 48px;animation:gridPan 16s linear infinite;pointer-events:none;"></div>
 
@@ -100,10 +121,16 @@ html,body{height:100%;background:#05070f;overflow:hidden;}
     </div>
 
     <!-- 進入按鈕 -->
-    <button onClick="{{ enter }}" style="{{ btnStyle }}">
-      <span style="{{ btnIconStyle }}">{{ btnIcon }}</span>
-      <span>{{ btnText }}</span>
-    </button>
+    <div style="{{ btnRowStyle }}">
+      <button onClick="{{ enter }}" style="{{ btnStyle }}">
+        <span style="{{ btnIconStyle }}">{{ btnIcon }}</span>
+        <span>{{ btnText }}</span>
+      </button>
+      <button onClick="{{ enterCast }}" style="{{ castBtnStyle }}">
+        <span style="{{ castBtnIconStyle }}">{{ castBtnIcon }}</span>
+        <span>{{ castBtnText }}</span>
+      </button>
+    </div>
 
     <!-- 底部資訊 -->
     <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(9px,1.3vh,12px);letter-spacing:2px;color:#3f7f93;text-align:center;line-height:1.7;">
@@ -129,7 +156,7 @@ html,body{height:100%;background:#05070f;overflow:hidden;}
 
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { license: null, loading: true, time: '', lang: 'zh' };
+  state = { license: null, loading: true, time: '', lang: 'zh', askPwd: false, pwd: '', pwdErr: false };
 
   componentDidMount() {
     // 先同步讀 localStorage(金鑰 + 語言設定),避免首次渲染閃爍
@@ -186,9 +213,25 @@ class Component extends DCLogic {
   }
 
   enter = () => {
-    // 安全閥：未綁定就不動作
-    if (!this.state.license) return;
-    window.location.href = './投播控制台.dc.html';
+    // 進入控制台前先要求密碼(模擬:任意密碼皆可)
+    this.setState({ askPwd: true, pwd: '', pwdErr: false });
+  };
+  onPwd = (e) => { this.setState({ pwd: e.target.value, pwdErr: false }); };
+  submitPwd = () => {
+    if ((this.state.pwd || '').length > 0) window.location.href = './完整名次.dc.html';
+    else this.setState({ pwdErr: true });
+  };
+  onPwdKey = (e) => { if (e.key === 'Enter') { e.preventDefault(); this.submitPwd(); } };
+  closePwd = () => { this.setState({ askPwd: false, pwd: '', pwdErr: false }); };
+
+  enterCast = () => {
+    const disp = (window.__resources && window.__resources.display) ? window.__resources.display : '投播畫面.dc.html';
+    try {
+      // 與控制台共用同一個投放視窗名稱，避免重複開窗
+      window.open(disp + '#src=cast', 'neonCastWindow');
+    } catch (e) {
+      window.location.href = disp + '#src=cast';
+    }
   };
 
   setLang = (l) => () => {
@@ -256,9 +299,23 @@ class Component extends DCLogic {
       cursor: 'not-allowed',
       opacity: 0.55
     });
-    const btnStyle = bound ? btnEnabled : btnDisabled;
+    const btnStyle = btnEnabled;
     const btnIconFs = 'clamp(14px,2vh,20px)';
-    const btnIconStyle = bound ? { fontSize: btnIconFs } : { fontSize: btnIconFs, opacity: 0.6 };
+    const btnIconStyle = { fontSize: btnIconFs };
+
+    // 兩顆按鈕並排的容器（窄螢幕自動換行）
+    const btnRowStyle = { display: 'flex', flexWrap: 'wrap', gap: 'clamp(12px,2vw,20px)', alignItems: 'center', justifyContent: 'center' };
+
+    // 投播畫面按鈕：次要外框風格（青色），與主按鈕的漸層做層級區分
+    const castEnabled = Object.assign({}, btnBase, {
+      color: '#7fe6f8',
+      background: 'rgba(0,229,255,.06)',
+      border: '1px solid rgba(0,229,255,.55)',
+      boxShadow: '0 0 24px rgba(0,229,255,.22), inset 0 0 18px rgba(0,229,255,.05)',
+      cursor: 'pointer'
+    });
+    const castBtnStyle = castEnabled;
+    const castBtnIconStyle = { fontSize: btnIconFs };
 
     // 場域文字
     let venuesText = '— —';
@@ -335,11 +392,29 @@ class Component extends DCLogic {
       unboundMainStyle: unboundMainStyle, unboundDescStyle: unboundDescStyle,
 
       // 進入按鈕
+      btnRowStyle: btnRowStyle,
       btnStyle: btnStyle,
       btnIconStyle: btnIconStyle,
-      btnIcon: bound ? '▶' : '⚿',
-      btnText: bound ? (en ? 'ENTER CONSOLE' : '進入控制台') : (en ? 'LOCKED' : '進入受限'),
+      btnIcon: '▶',
+      btnText: en ? 'ENTER CONSOLE' : '進入控制台',
       enter: this.enter,
+      askPwd: this.state.askPwd, pwd: this.state.pwd,
+      onPwd: this.onPwd, submitPwd: this.submitPwd, onPwdKey: this.onPwdKey, closePwd: this.closePwd,
+      pwdErr: this.state.pwdErr,
+      tLockTitle: en ? 'ENTER PASSWORD' : '請輸入密碼',
+      tLockSub: en ? 'Password required to enter the console.' : '進入控制台需要輸入密碼',
+      tPwdPh: en ? 'PASSWORD' : '密碼',
+      tPwdErr: en ? 'Enter any password to continue.' : '請輸入任意密碼以繼續',
+      tUnlock: en ? '▶ ENTER' : '▶ 進入',
+      tCancel: en ? 'CANCEL' : '取消',
+      tPwdHint: en ? '// Demo: any input works' : '// 模擬用:輸入任意密碼皆可',
+
+      // 投播畫面按鈕
+      castBtnStyle: castBtnStyle,
+      castBtnIconStyle: castBtnIconStyle,
+      castBtnIcon: '▣',
+      castBtnText: en ? 'CAST SCREEN' : '進入投播畫面',
+      enterCast: this.enterCast,
 
       // 語言切換
       setZh: this.setLang('zh'), setEn: this.setLang('en'),

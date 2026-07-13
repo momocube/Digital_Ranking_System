@@ -33,8 +33,8 @@ html,body{height:100%;background:#02040a;overflow:hidden;}
 
   <div style="{{ stageStyle }}">
     <div style="position:absolute;inset:-48px;background-image:linear-gradient(rgba(0,229,255,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.10) 1px,transparent 1px);background-size:48px 48px;animation:gridPan 16s linear infinite;"></div>
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 90% 38% at 50% 3%,rgba(0,229,255,.17),transparent 70%);animation:breathe 6s ease-in-out infinite;pointer-events:none;"></div>
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 32% at 50% 100%,rgba(255,45,149,.16),transparent 70%);pointer-events:none;"></div>
+    <div style="{{ topGlowStyle }}"></div>
+    <div style="{{ bottomGlowStyle }}"></div>
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse 110% 110% at 50% 50%,transparent 56%,rgba(0,0,0,.55));pointer-events:none;"></div>
     <div style="position:absolute;left:0;right:0;height:200px;background:linear-gradient(rgba(0,229,255,0),rgba(0,229,255,.08),rgba(0,229,255,0));animation:scan 10s linear infinite;pointer-events:none;"></div>
 
@@ -52,7 +52,7 @@ html,body{height:100%;background:#02040a;overflow:hidden;}
             <span style="font-family:'Noto Sans TC',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#fff;text-shadow:0 0 18px rgba(0,229,255,.7);">{{ venueName }}</span>
           </div>
           <div style="display:flex;align-items:center;gap:16px;font-family:'Share Tech Mono',monospace;font-size:17px;letter-spacing:2px;color:#5fb6cf;">
-            <span style="display:inline-flex;align-items:center;gap:9px;color:#ff8fc4;"><span style="width:10px;height:10px;border-radius:50%;background:#ff2d95;box-shadow:0 0 10px #ff2d95;animation:pulse 1.6s ease-in-out infinite;"></span>LIVE</span>
+            <span style="{{ periodChipStyle }}"><span style="{{ periodDotStyle }}"></span>{{ periodTag }}</span>
             <span>{{ statusText }}</span>
           </div>
         </div>
@@ -74,7 +74,7 @@ html,body{height:100%;background:#02040a;overflow:hidden;}
               <span style="font-family:'Noto Sans TC',sans-serif;font-weight:900;font-size:38px;line-height:1;color:#fff;text-shadow:0 0 18px rgba(0,229,255,.7);">{{ venueName }}</span>
             </div>
             <div style="display:flex;align-items:center;gap:14px;font-family:'Share Tech Mono',monospace;font-size:16px;letter-spacing:2px;color:#5fb6cf;">
-              <span style="display:inline-flex;align-items:center;gap:9px;color:#ff8fc4;"><span style="width:9px;height:9px;border-radius:50%;background:#ff2d95;box-shadow:0 0 10px #ff2d95;animation:pulse 1.6s ease-in-out infinite;"></span>LIVE</span>
+              <span style="{{ periodChipStyle }}"><span style="{{ periodDotStyle }}"></span>{{ periodTag }}</span>
               <span>{{ statusText }}</span>
             </div>
           </div>
@@ -121,7 +121,7 @@ html,body{height:100%;background:#02040a;overflow:hidden;}
 </template></x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:1920}}">
 class Component extends DCLogic {
-  state = { payload: null, src: 'cast', lang: 'zh' };
+  state = { payload: null, src: 'cast', lang: 'zh', boardIndex: 0 };
 
   defaultRows() {
     return [
@@ -153,10 +153,11 @@ class Component extends DCLogic {
     if (!payload && window.LB) { payload = Object.assign({ orientation: 'portrait' }, window.LB.current('tpe', 'f480')); }
     let lang = 'zh';
     try { lang = localStorage.getItem('leaderboard_lang') || 'zh'; } catch (e) {}
-    this.setState({ payload, src, lang });
+    this.setState({ payload: payload, src: src, lang: lang, boardIndex: 0 });
+    this.startRotation(payload);
 
     this._onStorage = (e) => {
-      if (e.key === key && e.newValue) { try { this.setState({ payload: JSON.parse(e.newValue) }); } catch (_) {} }
+      if (e.key === key && e.newValue) { try { this.applyPayload(JSON.parse(e.newValue)); } catch (_) {} }
       if (e.key === 'leaderboard_lang' && e.newValue) { this.setState({ lang: e.newValue }); }
     };
     window.addEventListener('storage', this._onStorage);
@@ -164,7 +165,7 @@ class Component extends DCLogic {
     this._onMsg = (e) => {
       const d = e.data;
       if (!d || typeof d !== 'object') return;
-      if (d.type === 'cast' && d.payload) this.setState({ payload: d.payload });
+      if (d.type === 'cast' && d.payload) this.applyPayload(d.payload);
       if (d.type === 'lang' && d.lang) this.setState({ lang: d.lang });
     };
     window.addEventListener('message', this._onMsg);
@@ -181,7 +182,23 @@ class Component extends DCLogic {
     window.removeEventListener('storage', this._onStorage);
     window.removeEventListener('message', this._onMsg);
     window.removeEventListener('resize', this._onResize);
+    if (this._rot) clearInterval(this._rot);
   }
+
+  // 多榜輪播:>1 張才啟動計時器,每 rotateMs 切換一張
+  startRotation(p) {
+    if (this._rot) { clearInterval(this._rot); this._rot = null; }
+    const boards = (p && p.boards && p.boards.length) ? p.boards : null;
+    if (boards && boards.length > 1) {
+      const ms = p.rotateMs || 8000;
+      this._rot = setInterval(() => {
+        const bs = (this.state.payload && this.state.payload.boards) || [];
+        if (bs.length > 1) this.setState({ boardIndex: ((this.state.boardIndex || 0) + 1) % bs.length });
+        else this.setState({ boardIndex: 0 });
+      }, ms);
+    }
+  }
+  applyPayload(p) { this.setState({ payload: p, boardIndex: 0 }); this.startRotation(p); }
 
   enterFs = () => {
     const el = document.documentElement;
@@ -203,6 +220,30 @@ class Component extends DCLogic {
   renderVals() {
     const en = this.state.lang === 'en';
     const P = this.state.payload || this.defaultPayload();
+    const boards = (P.boards && P.boards.length) ? P.boards : [P];
+    const idx = Math.min(this.state.boardIndex || 0, boards.length - 1);
+    const B = boards[idx] || P;
+    const period = B.period || 'live';
+    const TH = {
+      live:    { c: '#ff2d95', stageBg: '#05070f',
+                 badge: 'linear-gradient(90deg,rgba(255,45,149,.24),rgba(0,229,255,.10))',
+                 topGlow: 'radial-gradient(ellipse 90% 38% at 50% 3%,rgba(0,229,255,.17),transparent 70%)',
+                 botGlow: 'radial-gradient(ellipse 80% 32% at 50% 100%,rgba(255,45,149,.16),transparent 70%)' },
+      quarter: { c: '#7ff0ff', stageBg: '#02070e',
+                 badge: 'linear-gradient(90deg,rgba(0,229,255,.28),rgba(0,229,255,.06))',
+                 topGlow: 'radial-gradient(ellipse 92% 42% at 50% 3%,rgba(0,229,255,.32),transparent 72%)',
+                 botGlow: 'radial-gradient(ellipse 84% 36% at 50% 100%,rgba(0,170,255,.22),transparent 72%)' },
+      annual:  { c: '#ffd84d', stageBg: '#0b0803',
+                 badge: 'linear-gradient(90deg,rgba(255,216,77,.30),rgba(255,140,0,.09))',
+                 topGlow: 'radial-gradient(ellipse 92% 42% at 50% 3%,rgba(255,216,77,.30),transparent 72%)',
+                 botGlow: 'radial-gradient(ellipse 84% 36% at 50% 100%,rgba(255,150,0,.20),transparent 72%)' }
+    };
+    const pTheme = TH[period] || TH.live;
+    const periodTag = B.periodTag ? (en ? B.periodTag.en : B.periodTag.zh) : (en ? 'LIVE' : '即時');
+    const periodTitleTxt = B.periodTitle ? (en ? B.periodTitle.en : B.periodTitle.zh) : '';
+    const versionTxt = B.version ? (en ? B.version.en : B.version.zh) : '';
+    let dots = '';
+    if (boards.length > 1) { dots = boards.map(function (_b, i) { return i === idx ? '●' : '○'; }).join(' '); }
     const isP = (P.orientation || 'portrait') !== 'landscape';
     const W = isP ? 1080 : 1920, H = isP ? 1920 : 1080;
     const cols = isP ? '84px 1.3fr 0.8fr 1.05fr 1.35fr' : '120px 1.1fr 1fr 1.05fr 1.1fr';
@@ -221,7 +262,7 @@ class Component extends DCLogic {
       return s.slice(0, MAX_NAME - 1) + '…';
     };
 
-    const rows = (P.rows || []).slice(0, 10).map((r, i) => {
+    const rows = (B.rows || []).slice(0, 10).map((r, i) => {
       const t = this.tier(i), top = i < 3;
       const blW = isP ? (top ? '5px' : '4px') : (top ? '4px' : '3px');
       return {
@@ -244,8 +285,9 @@ class Component extends DCLogic {
     const d = new Date(P.updated || Date.now());
     const p2 = (n) => String(n).padStart(2, '0');
     const updatedText = p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
-    const region = P.region ? (en ? P.region.en : P.region.zh) : '';
-    const venueName = P.venue ? (en ? P.venue.en : P.venue.zh) : '';
+    const region = B.region ? (en ? B.region.en : B.region.zh) : '';
+    const venueBase = B.venue ? (en ? B.venue.en : B.venue.zh) : '';
+    const venueName = venueBase + (versionTxt ? ' · ' + versionTxt : '');
 
     const langFs = 'clamp(11px,1.5vh,14px)';
     const langPad = 'clamp(6px,1vh,8px) clamp(10px,1.4vw,14px)';
@@ -268,12 +310,17 @@ class Component extends DCLogic {
         : { fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: (isP ? 30 : 26) + 'px', letterSpacing: isP ? '7px' : '6px', color: '#ff2d95', textShadow: '0 0 16px rgba(255,45,149,.6)' },
       venueLabel: en ? 'FIELD' : '場域',
       venueName: venueName,
-      statusText: region + ' · ' + (en ? 'UPDATED ' : '更新 ') + updatedText,
+      statusText: (periodTitleTxt ? periodTitleTxt + ' · ' : '') + region + ' · ' + (en ? 'UPDATED ' : '更新 ') + updatedText + (dots ? '    ' + dots : ''),
+      periodTag: periodTag,
+      periodChipStyle: { display: 'inline-flex', alignItems: 'center', gap: '12px', fontFamily: "'Noto Sans TC',sans-serif", fontWeight: 900, fontSize: (isP ? '44px' : '34px'), letterSpacing: '5px', color: pTheme.c, background: pTheme.badge, border: '2px solid ' + pTheme.c, boxShadow: '0 0 28px ' + pTheme.c + '66', padding: (isP ? '10px 28px' : '7px 22px'), lineHeight: '1' },
+      periodDotStyle: { width: (isP ? '18px' : '14px'), height: (isP ? '18px' : '14px'), borderRadius: '50%', background: pTheme.c, boxShadow: '0 0 14px ' + pTheme.c, animation: 'pulse 1.6s ease-in-out infinite', display: 'inline-block' },
+      topGlowStyle: { position: 'absolute', inset: 0, background: pTheme.topGlow, animation: 'breathe 6s ease-in-out infinite', pointerEvents: 'none' },
+      bottomGlowStyle: { position: 'absolute', inset: 0, background: pTheme.botGlow, pointerEvents: 'none' },
       lblRank: en ? 'RANK' : '排名', lblTeam: en ? 'TEAM' : '隊伍', lblStage: en ? 'STAGE' : '關卡', lblTime: en ? 'TIME' : '破關時間', lblScore: en ? 'SCORE' : '分數',
       footerLeft: venueName + (en ? ' · AUTO-SYNC' : ' · 自動擷取中'),
       footerRight: en ? '// 5 SUB-STAGES PER TIER · NEON CLASH RANKING' : '// 每 5 小關晉升一大關 · NEON CLASH RANKING',
       rows: rows,
-      stageStyle: { position: 'relative', width: W + 'px', height: H + 'px', overflow: 'hidden', background: '#05070f', fontFamily: "'Noto Sans TC',sans-serif", transform: 'scale(' + scale + ')', transformOrigin: 'center center', flex: '0 0 auto' },
+      stageStyle: { position: 'relative', width: W + 'px', height: H + 'px', overflow: 'hidden', background: pTheme.stageBg, fontFamily: "'Noto Sans TC',sans-serif", transform: 'scale(' + scale + ')', transformOrigin: 'center center', flex: '0 0 auto' },
       contentStyle: { position: 'relative', zIndex: 2, height: '100%', padding: isP ? '54px 44px 44px' : '50px 60px 50px', display: 'flex', flexDirection: 'column' },
       colHeaderStyle: { display: 'grid', gridTemplateColumns: cols, alignItems: 'center', gap: gap, padding: isP ? '22px 26px 14px' : '20px 36px 18px', fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: '18px', letterSpacing: '4px', color: '#4f8aa0' },
       rowsWrapStyle: { display: 'flex', flexDirection: 'column', gap: isP ? '9px' : '12px', flex: '1' }
