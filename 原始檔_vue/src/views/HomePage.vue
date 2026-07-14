@@ -24,11 +24,25 @@ let timer: number | undefined;
 onMounted(() => { tick(); timer = window.setInterval(tick, 1000); });
 onUnmounted(() => { if (timer) clearInterval(timer); });
 
-// ---- 進入 ----
+// ---- 密碼關卡(保留授權判斷,已綁定才會跳密碼;模擬:任意密碼皆可) ----
+const askPwd = ref(false);
+const pwd = ref('');
+const pwdErr = ref(false);
 const enter = () => {
   if (!license.value) return;
-  window.location.href = './console.html';
+  askPwd.value = true; pwd.value = ''; pwdErr.value = false;
 };
+const enterCast = () => {
+  if (!license.value) return;
+  window.open('./broadcast.html#src=cast', 'neonCastWindow');
+};
+const onPwd = (e: Event) => { pwd.value = (e.target as HTMLInputElement).value; pwdErr.value = false; };
+const submitPwd = () => {
+  if (pwd.value.length > 0) window.location.href = './full-ranking.html';
+  else pwdErr.value = true;
+};
+const onPwdKey = (e: KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); submitPwd(); } };
+const closePwd = () => { askPwd.value = false; pwd.value = ''; pwdErr.value = false; };
 
 // ---- 顯示用 computed ----
 const maskKey = (k: string | undefined): string => {
@@ -71,10 +85,35 @@ const btnText = computed(() => {
   return en.value ? 'LOCKED' : '進入受限';
 });
 const btnIcon = computed(() => bound.value ? '▶' : '⚿');
+const castText = computed(() => bound.value ? (en.value ? 'CAST SCREEN' : '進入投播畫面') : (en.value ? 'LOCKED' : '進入受限'));
+const castIcon = computed(() => bound.value ? '▣' : '⚿');
+const tLockTitle = computed(() => en.value ? 'ENTER PASSWORD' : '請輸入密碼');
+const tLockSub = computed(() => en.value ? 'Password required to enter the console.' : '進入控制台需要輸入密碼');
+const tPwdPh = computed(() => en.value ? 'PASSWORD' : '密碼');
+const tPwdErr = computed(() => en.value ? 'Enter any password to continue.' : '請輸入任意密碼以繼續');
+const tUnlock = computed(() => en.value ? '▶ ENTER' : '▶ 進入');
+const tCancel = computed(() => en.value ? 'CANCEL' : '取消');
+const tPwdHint = computed(() => en.value ? '// Demo: any input works' : '// 模擬用:輸入任意密碼皆可');
 </script>
 
 <template>
   <div class="home-root">
+    <!-- 密碼視窗 -->
+    <div v-if="askPwd" class="pwd-overlay">
+      <div class="pwd-card">
+        <div class="pwd-kicker">◢ ACCESS REQUIRED ◣</div>
+        <div class="pwd-lock">⚿</div>
+        <div class="pwd-title">{{ tLockTitle }}</div>
+        <div class="pwd-sub">{{ tLockSub }}</div>
+        <input type="password" :value="pwd" @input="onPwd" @keydown="onPwdKey" :placeholder="tPwdPh" class="pwd-input" />
+        <div v-if="pwdErr" class="pwd-err">{{ tPwdErr }}</div>
+        <div class="pwd-actions">
+          <button @click="closePwd" class="pwd-cancel">{{ tCancel }}</button>
+          <button @click="submitPwd" class="pwd-submit">{{ tUnlock }}</button>
+        </div>
+        <div class="pwd-hint">{{ tPwdHint }}</div>
+      </div>
+    </div>
     <!-- 背景層 -->
     <div class="bg-grid"></div>
     <div class="bg-edge-glow"></div>
@@ -141,13 +180,16 @@ const btnIcon = computed(() => bound.value ? '▶' : '⚿');
       </div>
 
       <!-- 進入按鈕 -->
-      <button
-        @click="enter"
-        :class="['enter-btn', bound ? 'enter-enabled' : 'enter-disabled']"
-      >
-        <span :class="['enter-icon', { faded: !bound }]">{{ btnIcon }}</span>
-        <span>{{ btnText }}</span>
-      </button>
+      <div class="enter-row">
+        <button @click="enter" :class="['enter-btn', bound ? 'enter-enabled' : 'enter-disabled']">
+          <span :class="['enter-icon', { faded: !bound }]">{{ btnIcon }}</span>
+          <span>{{ btnText }}</span>
+        </button>
+        <button @click="enterCast" :class="['enter-btn', 'cast-btn', bound ? 'cast-enabled' : 'enter-disabled']">
+          <span :class="['enter-icon', { faded: !bound }]">{{ castIcon }}</span>
+          <span>{{ castText }}</span>
+        </button>
+      </div>
 
       <!-- 底部 -->
       <div class="footer">
@@ -447,6 +489,36 @@ const btnIcon = computed(() => bound.value ? '▶' : '⚿');
 }
 .enter-icon { font-size: clamp(14px, 2vh, 20px); }
 .enter-icon.faded { opacity: 0.6; }
+.enter-row { display: flex; flex-wrap: wrap; gap: clamp(12px, 2vw, 20px); align-items: center; justify-content: center; }
+.cast-enabled {
+  color: #7fe6f8;
+  background: rgba(0, 229, 255, 0.06);
+  border: 1px solid rgba(0, 229, 255, 0.55);
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.22), inset 0 0 18px rgba(0, 229, 255, 0.05);
+  cursor: pointer;
+}
+
+/* ===== 密碼視窗 ===== */
+.pwd-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(2, 4, 10, 0.82); display: flex; align-items: center; justify-content: center; }
+.pwd-card {
+  position: relative; width: min(420px, 90vw);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  background: linear-gradient(160deg, rgba(10, 16, 24, 0.98), rgba(5, 10, 18, 0.98));
+  box-shadow: 0 0 40px rgba(0, 229, 255, 0.18), inset 0 0 30px rgba(0, 229, 255, 0.03);
+  padding: clamp(26px, 4.5vh, 40px) clamp(22px, 4vw, 36px);
+  display: flex; flex-direction: column; gap: clamp(13px, 2.2vh, 18px); align-items: center; text-align: center;
+}
+.pwd-kicker { font-family: Rajdhani, sans-serif; font-weight: 700; font-size: clamp(11px, 1.5vh, 14px); letter-spacing: clamp(4px, 0.9vw, 7px); color: #34c8e8; }
+.pwd-lock { font-family: 'Share Tech Mono', monospace; font-size: clamp(40px, 6vh, 56px); line-height: 1; color: #34c8e8; text-shadow: 0 0 22px rgba(0, 229, 255, 0.6); }
+.pwd-title { font-family: 'Noto Sans TC', sans-serif; font-weight: 900; font-size: clamp(19px, 3.2vh, 28px); color: #eafdff; text-shadow: 0 0 18px rgba(0, 229, 255, 0.5); }
+.pwd-sub { font-family: 'Share Tech Mono', monospace; font-size: clamp(11px, 1.5vh, 13px); letter-spacing: 1px; color: #5fb6cf; line-height: 1.6; }
+.pwd-input { width: 100%; margin-top: 4px; padding: clamp(12px, 1.8vh, 16px) 18px; font-family: 'Share Tech Mono', monospace; font-size: clamp(15px, 2vh, 18px); letter-spacing: 3px; color: #eafdff; background: #0a1018; border: 1px solid rgba(0, 229, 255, 0.4); outline: none; text-align: center; }
+.pwd-input:focus { border-color: #34c8e8; }
+.pwd-err { font-family: 'Share Tech Mono', monospace; font-size: clamp(10px, 1.4vh, 12px); letter-spacing: 1px; color: #ff6680; }
+.pwd-actions { display: flex; gap: 10px; width: 100%; margin-top: 2px; }
+.pwd-cancel { flex: 0 0 34%; padding: clamp(11px, 1.8vh, 16px) 0; font-family: Rajdhani, sans-serif; font-weight: 700; font-size: clamp(13px, 1.8vh, 16px); letter-spacing: 2px; color: #7fb6c8; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(0, 229, 255, 0.3); cursor: pointer; }
+.pwd-submit { flex: 1; padding: clamp(11px, 1.8vh, 16px) 0; font-family: Rajdhani, sans-serif; font-weight: 700; font-size: clamp(14px, 2vh, 18px); letter-spacing: clamp(2px, 0.6vw, 5px); color: #fff; background: linear-gradient(90deg, rgba(255, 45, 149, 0.9), rgba(0, 229, 255, 0.8)); border: none; box-shadow: 0 0 26px rgba(255, 45, 149, 0.4); cursor: pointer; }
+.pwd-hint { font-family: 'Share Tech Mono', monospace; font-size: clamp(9px, 1.2vh, 11px); letter-spacing: 1px; color: #3f7f93; }
 
 /* ===== 底部 ===== */
 .footer {

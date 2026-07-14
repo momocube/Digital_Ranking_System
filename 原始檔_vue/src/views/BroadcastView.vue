@@ -9,7 +9,7 @@
  *  - 開新窗時發 'ready' 回 opener/parent,讓控制台推目前資料過來
  *  - src=preview 隱藏中英切換與全螢幕按鈕
  */
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useLanguage } from '@/composables/useLanguage';
 import { LB, type Payload, type Row } from '@/data/leaderboard-data';
 
@@ -89,6 +89,7 @@ const onResize = () => {
 onMounted(() => {
   src.value = detectSrc();
   loadPayload();
+  startRotation();
 
   window.addEventListener('storage', onStorage);
   window.addEventListener('message', onMsg);
@@ -103,6 +104,7 @@ onUnmounted(() => {
   window.removeEventListener('storage', onStorage);
   window.removeEventListener('message', onMsg);
   window.removeEventListener('resize', onResize);
+  if (rotTimer) clearInterval(rotTimer);
 });
 
 // ---- 全螢幕 ----
@@ -122,6 +124,59 @@ const isLandscape = computed(() => !isPortrait.value);
 const W = computed(() => isPortrait.value ? 1080 : 1920);
 const H = computed(() => isPortrait.value ? 1920 : 1080);
 const scale = computed(() => Math.min(vw.value / W.value, vh.value / H.value) || 1);
+
+// ---- 期間輪播:boards 陣列每 rotateMs 切換一張 ----
+const boardIndex = ref(0);
+const boards = computed<Payload[]>(() => (P.value.boards && P.value.boards.length) ? P.value.boards : [P.value]);
+const curIdx = computed(() => Math.min(boardIndex.value, boards.value.length - 1));
+const B = computed<Payload>(() => boards.value[curIdx.value] || P.value);
+const period = computed<'live' | 'quarter' | 'annual'>(() => B.value.period || 'live');
+const periodC = computed(() => period.value === 'annual' ? '#ffd84d' : (period.value === 'quarter' ? '#7ff0ff' : '#ff2d95'));
+const periodBg = computed(() => period.value === 'annual' ? '#0b0803' : (period.value === 'quarter' ? '#02070e' : '#05070f'));
+const periodTag = computed(() => B.value.periodTag ? (en.value ? B.value.periodTag.en : B.value.periodTag.zh) : (en.value ? 'LIVE' : '即時'));
+const periodTitleText = computed(() => B.value.periodTitle ? (en.value ? B.value.periodTitle.en : B.value.periodTitle.zh) : '');
+const versionText = computed(() => B.value.version ? (en.value ? B.value.version.en : B.value.version.zh) : '');
+const dots = computed(() => boards.value.length > 1 ? boards.value.map((_b, i) => i === curIdx.value ? '●' : '○').join(' ') : '');
+
+const topGlowStyle = computed(() => ({ background: period.value === 'annual'
+  ? 'radial-gradient(ellipse 92% 42% at 50% 3%,rgba(255,216,77,.30),transparent 72%)'
+  : (period.value === 'quarter' ? 'radial-gradient(ellipse 92% 42% at 50% 3%,rgba(0,229,255,.32),transparent 72%)'
+  : 'radial-gradient(ellipse 90% 38% at 50% 3%,rgba(0,229,255,.17),transparent 70%)') } as Record<string, string>));
+const bottomGlowStyle = computed(() => ({ background: period.value === 'annual'
+  ? 'radial-gradient(ellipse 84% 36% at 50% 100%,rgba(255,150,0,.20),transparent 72%)'
+  : (period.value === 'quarter' ? 'radial-gradient(ellipse 84% 36% at 50% 100%,rgba(0,170,255,.22),transparent 72%)'
+  : 'radial-gradient(ellipse 80% 32% at 50% 100%,rgba(255,45,149,.16),transparent 70%)') } as Record<string, string>));
+const periodBadgeStyle = computed(() => ({
+  display: 'inline-flex', alignItems: 'center', gap: '12px',
+  fontFamily: "'Noto Sans TC',sans-serif", fontWeight: '900',
+  fontSize: isPortrait.value ? '44px' : '34px', letterSpacing: '5px',
+  color: periodC.value,
+  background: period.value === 'annual' ? 'linear-gradient(90deg,rgba(255,216,77,.30),rgba(255,140,0,.09))'
+    : (period.value === 'quarter' ? 'linear-gradient(90deg,rgba(0,229,255,.28),rgba(0,229,255,.06))'
+    : 'linear-gradient(90deg,rgba(255,45,149,.24),rgba(0,229,255,.10))'),
+  border: '2px solid ' + periodC.value,
+  boxShadow: '0 0 28px ' + periodC.value + '66',
+  padding: isPortrait.value ? '10px 28px' : '7px 22px', lineHeight: '1'
+} as Record<string, string>));
+const periodDotStyle = computed(() => ({
+  width: isPortrait.value ? '18px' : '14px', height: isPortrait.value ? '18px' : '14px',
+  borderRadius: '50%', background: periodC.value, boxShadow: '0 0 14px ' + periodC.value, display: 'inline-block'
+} as Record<string, string>));
+
+let rotTimer: number | undefined;
+const startRotation = () => {
+  if (rotTimer) { clearInterval(rotTimer); rotTimer = undefined; }
+  const p = payload.value;
+  if (p && p.boards && p.boards.length > 1) {
+    const ms = p.rotateMs || 8000;
+    rotTimer = window.setInterval(() => {
+      const bs = payload.value?.boards;
+      if (bs && bs.length > 1) boardIndex.value = (boardIndex.value + 1) % bs.length;
+      else boardIndex.value = 0;
+    }, ms);
+  }
+};
+watch(payload, () => { boardIndex.value = 0; startRotation(); });
 
 const cols = computed(() => isPortrait.value
   ? '84px 1.3fr 0.8fr 1.05fr 1.35fr'
@@ -157,7 +212,7 @@ const tier = (i: number): Tier => {
 
 // ---- 排行列 ----
 const rows = computed(() => {
-  const list = (P.value.rows || []).slice(0, 10);
+  const list = (B.value.rows || []).slice(0, 10);
   return list.map((r, i) => {
     const t = tier(i);
     const top = i < 3;
@@ -224,15 +279,18 @@ const rows = computed(() => {
 });
 
 // ---- 標題、場域、狀態 ----
-const region    = computed(() => P.value.region ? (en.value ? P.value.region.en : P.value.region.zh) : '');
-const venueName = computed(() => P.value.venue  ? (en.value ? P.value.venue.en  : P.value.venue.zh)  : '');
+const region    = computed(() => B.value.region ? (en.value ? B.value.region.en : B.value.region.zh) : '');
+const venueName = computed(() => {
+  const base = B.value.venue ? (en.value ? B.value.venue.en : B.value.venue.zh) : '';
+  return base + (versionText.value ? ' · ' + versionText.value : '');
+});
 
 const p2 = (n: number) => String(n).padStart(2, '0');
 const updatedText = computed(() => {
-  const d = new Date(P.value.updated || Date.now());
+  const d = new Date(B.value.updated || Date.now());
   return `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
 });
-const statusText = computed(() => `${region.value} · ${en.value ? 'UPDATED ' : '更新 '}${updatedText.value}`);
+const statusText = computed(() => `${periodTitleText.value ? periodTitleText.value + ' · ' : ''}${region.value} · ${en.value ? 'UPDATED ' : '更新 '}${updatedText.value}${dots.value ? '    ' + dots.value : ''}`);
 
 const titleMain = computed(() => en.value ? 'LEADERBOARD' : '排行榜');
 const titleSub  = computed(() => en.value ? 'RANKINGS'    : 'LEADERBOARD');
@@ -251,7 +309,7 @@ const stageStyle = computed(() => ({
   width: `${W.value}px`,
   height: `${H.value}px`,
   overflow: 'hidden',
-  background: '#05070f',
+  background: periodBg.value,
   fontFamily: "'Noto Sans TC',sans-serif",
   transform: `scale(${scale.value})`,
   transformOrigin: 'center center',
@@ -264,8 +322,8 @@ const contentStyle = computed(() => ({
   height: '100%',
   padding: isPortrait.value ? '54px 44px 44px' : '50px 60px 50px',
   display: 'flex',
-  flexDirection: 'column' as const
-}));
+  flexDirection: 'column'
+} as Record<string, string>));
 
 const colHeaderStyle = computed(() => ({
   display: 'grid',
@@ -326,8 +384,8 @@ const footerRight = computed(() => en.value
     <div :style="stageStyle">
       <!-- 背景:網格 / 上暈 / 下暈 / 邊緣暗角 / 掃描線 -->
       <div class="bg-grid"></div>
-      <div class="bg-top-glow"></div>
-      <div class="bg-bottom-glow"></div>
+      <div class="bg-top-glow" :style="topGlowStyle"></div>
+      <div class="bg-bottom-glow" :style="bottomGlowStyle"></div>
       <div class="bg-vignette"></div>
       <div class="bg-scan"></div>
 
@@ -345,8 +403,8 @@ const footerRight = computed(() => en.value
             <span class="venue-name-p">{{ venueName }}</span>
           </div>
           <div class="status-row">
-            <span class="live-badge">
-              <span class="live-dot"></span>LIVE
+            <span class="period-badge" :style="periodBadgeStyle">
+              <span :style="periodDotStyle"></span>{{ periodTag }}
             </span>
             <span>{{ statusText }}</span>
           </div>
@@ -368,8 +426,8 @@ const footerRight = computed(() => en.value
               <span class="venue-name-l">{{ venueName }}</span>
             </div>
             <div class="status-row-l">
-              <span class="live-badge live-badge-l">
-                <span class="live-dot live-dot-l"></span>LIVE
+              <span class="period-badge" :style="periodBadgeStyle">
+                <span :style="periodDotStyle"></span>{{ periodTag }}
               </span>
               <span>{{ statusText }}</span>
             </div>

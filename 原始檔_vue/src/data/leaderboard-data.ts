@@ -42,6 +42,26 @@ export interface Payload {
   _venueId?: string;
   /** 廣播畫面用,決定顯示直式或橫式 */
   orientation?: 'portrait' | 'landscape';
+  /** 人數版本(2-3 人…) */
+  version?: { id?: string; zh: string; en: string };
+  /** 期間:即時 / 季度 / 年度 */
+  period?: Period;
+  /** 期間短標籤(徽章用) */
+  periodTag?: { zh: string; en: string };
+  /** 期別文字(2026 第 3 季 / 2026 年度) */
+  periodTitle?: { zh: string; en: string };
+  _versionId?: string;
+  /** 多榜輪播:投播畫面依此陣列每 rotateMs 切換一張 */
+  boards?: Payload[];
+  rotateMs?: number;
+}
+
+export type Period = 'live' | 'quarter' | 'annual';
+
+export interface VersionInfo {
+  id: string;
+  zh: string;
+  en: string;
 }
 
 // ==================== 內部工具 ====================
@@ -210,6 +230,35 @@ function pack(rg: MetaEntry, v: VenueInfo, rows: Row[]): Payload {
   };
 }
 
+// ==================== 人數版本 + 期間榜 ====================
+
+const VERSIONS: VersionInfo[] = [
+  { id: 'v23', zh: '2-3 人', en: '2-3P' },
+  { id: 'v45', zh: '4-5 人', en: '4-5P' },
+  { id: 'v6',  zh: '6 人以上', en: '6P+' }
+];
+function verIndex(vid: string): number {
+  const i = VERSIONS.findIndex((v) => v.id === vid);
+  return i >= 0 ? i : 0;
+}
+
+const PERIOD_TAG: Record<Period, { zh: string; en: string }> = {
+  live:    { zh: '即時', en: 'LIVE' },
+  quarter: { zh: '季度', en: 'QUARTER' },
+  annual:  { zh: '年度', en: 'ANNUAL' }
+};
+
+function periodTitle(period: Period): { zh: string; en: string } {
+  const now = new Date();
+  const y = now.getFullYear();
+  if (period === 'quarter') {
+    const q = Math.floor(now.getMonth() / 3) + 1;
+    return { zh: `${y} 第 ${q} 季`, en: `${y} Q${q}` };
+  }
+  if (period === 'annual') return { zh: `${y} 年度總榜`, en: `${y} SEASON` };
+  return { zh: '即時更新', en: 'LIVE' };
+}
+
 // ==================== 對外 API ====================
 
 /** 拿全部店家 + 場域清單(給下拉選單用) */
@@ -268,5 +317,46 @@ export function updateTeam(rid: string, vid: string, teamId: string, newName: st
   return true;
 }
 
+/** 回傳人數版本清單 */
+export function versions(): VersionInfo[] {
+  return VERSIONS.map((v) => ({ id: v.id, zh: v.zh, en: v.en }));
+}
+
+/**
+ * 取某店家 × 場域 × 人數版本 × 期間 的排行榜
+ * period: 'live' | 'quarter' | 'annual'(預設 live)
+ * 輸出沿用 Payload 格式,另附 version / period / periodTag / periodTitle 供投播畫面顯示。
+ * live 直接用即時資料;quarter / annual 以版本+期間各自的種子產生不同名次,
+ * 年度分數較高(全年累積感)、季度略低。真接資料時把這裡換成讀 DB 即可。
+ */
+export function board(rid: string, vid: string, verId: string, period: Period = 'live'): Payload | null {
+  const f = find(rid, vid);
+  if (!f.rg || !f.v) return null;
+  const vi = verIndex(verId);
+  const ver = VERSIONS[vi];
+  let rows: Row[];
+  if (period === 'live') {
+    rows = format(STORE[`${rid}/${vid}`]);
+  } else {
+    const offset = (period === 'quarter' ? 700 : 1300) + vi * 37;
+    const scale = period === 'annual' ? 1.18 : 0.86;
+    const st = buildState(f.rg._pool, f.v._seed + offset).map((r) => ({
+      ...r,
+      score: Math.max(50000, Math.round(r.score * scale))
+    }));
+    rows = format(st);
+  }
+  return {
+    region: { zh: f.rg.zh, en: f.rg.en },
+    venue: { zh: f.v.zh, en: f.v.en },
+    version: { id: ver.id, zh: ver.zh, en: ver.en },
+    period,
+    periodTag: PERIOD_TAG[period],
+    periodTitle: periodTitle(period),
+    rows,
+    updated: Date.now()
+  };
+}
+
 /** 一次匯出所有可用 API,方便 Composable 引用 */
-export const LB = { regions, current, capture, updateTeam };
+export const LB = { regions, current, capture, updateTeam, versions, board };

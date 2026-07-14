@@ -14,7 +14,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useLanguage } from '@/composables/useLanguage';
 import { LB, type RegionInfo, type Payload } from '@/data/leaderboard-data';
 
-const { lang, en, setLang } = useLanguage();
+const { en, setLang } = useLanguage();
 
 // ---- 篩選 / 排序 / 編輯 state ----
 const regions = ref<RegionInfo[]>([]);
@@ -62,6 +62,7 @@ const onStore  = (e: Event) => { storeFilter.value = (e.target as HTMLSelectElem
 const onVenue  = (e: Event) => { venueFilter.value = (e.target as HTMLSelectElement).value; };
 const onSearch = (e: Event) => { search.value = (e.target as HTMLInputElement).value; };
 const reset    = () => { storeFilter.value = 'all'; venueFilter.value = 'all'; search.value = ''; sortBy.value = 'score'; sortDir.value = 'desc'; };
+const toConsole = () => { window.location.href = './console.html'; };
 
 function toggleSort(col: SortBy) {
   if (sortBy.value === col) {
@@ -308,13 +309,13 @@ const titleZhStyle: Record<string, string> = {
 const langBase: Record<string, string> = { fontFamily: 'Rajdhani,sans-serif', fontWeight: '700', fontSize: 'clamp(11px,1.4vh,14px)', letterSpacing: '2px', padding: 'clamp(5px,0.8vh,7px) clamp(10px,1.4vw,16px)', cursor: 'pointer', border: '1px solid rgba(0,229,255,.3)', background: 'rgba(0,0,0,.4)', color: '#5f93a8' };
 const langOn:   Record<string, string> = { ...langBase, border: '1px solid #34c8e8', background: 'rgba(0,229,255,.16)', color: '#eafdff' };
 
-const sortRankBtn = computed<Record<string, string>>(() => sortBy.value === 'score'
+const sortRankBtn = computed<Record<string, string>>(() => (sortBy.value === 'score'
   ? { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: '700', fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#eafdff', background: 'rgba(0,229,255,.18)', border: '1px solid #34c8e8', boxShadow: '0 0 14px rgba(0,229,255,.25) inset', cursor: 'pointer' }
-  : { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: '700', fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#5f93a8', background: 'rgba(0,0,0,.3)', border: '1px solid rgba(0,229,255,.25)', cursor: 'pointer' });
+  : { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: '700', fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#5f93a8', background: 'rgba(0,0,0,.3)', border: '1px solid rgba(0,229,255,.25)', cursor: 'pointer' }) as Record<string, string>);
 
-const sortTimeBtn = computed<Record<string, string>>(() => sortBy.value === 'time'
+const sortTimeBtn = computed<Record<string, string>>(() => (sortBy.value === 'time'
   ? { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: '700', fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#eafdff', background: 'rgba(255,45,149,.18)', border: '1px solid #ff6bb0', boxShadow: '0 0 14px rgba(255,45,149,.25) inset', cursor: 'pointer' }
-  : { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: '700', fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#5f93a8', background: 'rgba(0,0,0,.3)', border: '1px solid rgba(255,45,149,.25)', cursor: 'pointer' });
+  : { flex: '1', padding: 'clamp(10px,1.5vh,14px) 0', fontFamily: 'Rajdhani,sans-serif', fontWeight: '700', fontSize: 'clamp(11px,1.5vh,14px)', letterSpacing: '3px', color: '#5f93a8', background: 'rgba(0,0,0,.3)', border: '1px solid rgba(255,45,149,.25)', cursor: 'pointer' }) as Record<string, string>);
 
 // ---- 欄位表頭箭頭 ----
 const arrowFor = (col: SortBy) => sortBy.value === col ? (sortDir.value === 'asc' ? ' ▲' : ' ▼') : '';
@@ -354,6 +355,7 @@ const tFooterRight = computed(() => en.value
 const tEmpty     = computed(() => en.value ? 'NO MATCHING RANKS' : '查無符合條件的名次');
 const tEmptyHint = computed(() => en.value ? 'Try clearing filters or change keywords.' : '試試清除篩選或更換關鍵字。');
 const dblclickHint = computed(() => en.value ? '✎ Double-click' : '✎ 雙擊編輯');
+const tToConsole = computed(() => en.value ? '⚙ CONSOLE' : '⚙ 切換到主控台');
 </script>
 
 <template>
@@ -371,6 +373,7 @@ const dblclickHint = computed(() => en.value ? '✎ Double-click' : '✎ 雙擊�
       </div>
       <div class="header-right">
         <div class="lang-btns">
+          <button @click="toConsole" class="btn-to-console">{{ tToConsole }}</button>
           <button @click="setLang('zh')" :style="en ? langBase : langOn">中文</button>
           <button @click="setLang('en')" :style="en ? langOn : langBase">EN</button>
         </div>
@@ -540,6 +543,18 @@ const dblclickHint = computed(() => en.value ? '✎ Double-click' : '✎ 雙擊�
   line-height: 1.7;
 }
 .check-time { color: #3f7f93; }
+.btn-to-console {
+  font-family: Rajdhani, sans-serif;
+  font-weight: 700;
+  font-size: clamp(11px, 1.4vh, 14px);
+  letter-spacing: 2px;
+  padding: clamp(5px, 0.8vh, 7px) clamp(12px, 1.6vw, 18px);
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(90deg, rgba(255, 45, 149, 0.85), rgba(0, 229, 255, 0.7));
+  border: none;
+  box-shadow: 0 0 16px rgba(255, 45, 149, 0.35);
+}
 
 /* ===== 篩選列 ===== */
 .filter-row {
