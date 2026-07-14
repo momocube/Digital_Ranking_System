@@ -1,17 +1,15 @@
 <script setup lang="ts">
 /**
- * 主頁 HomePage.vue — 系統入口
- * 對應舊版 主頁.dc.html。功能:
- *  - 讀 license.json / localStorage 判斷已綁定 / 未綁定 / 載入中
- *  - 中英切換(共用 leaderboard_lang localStorage,跨分頁同步)
- *  - 進入按鈕帶到 console.html;未綁定則失效
+ * 主頁 HomePage.vue — 系統入口(已移除金鑰認證)
+ *  - 不再依 license 擋人,兩顆按鈕永遠可用
+ *  - 左鈕「進入控制台」:點擊 → 密碼視窗(模擬:任意密碼)→ full-ranking.html
+ *  - 右鈕「進入投播畫面」:點擊直接前往 broadcast.html
+ *  - 10 秒內未點任一主要按鈕 → 自動跳轉投播畫面;右鈕顯示倒數秒數
  */
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useLanguage } from '@/composables/useLanguage';
-import { useLicense } from '@/composables/useLicense';
 
 const { en, setLang } = useLanguage();
-const { license, loading, bound, unbound } = useLicense();
 
 // ---- 時鐘 ----
 const time = ref('');
@@ -20,22 +18,36 @@ const tick = () => {
   const d = new Date();
   time.value = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
 };
-let timer: number | undefined;
-onMounted(() => { tick(); timer = window.setInterval(tick, 1000); });
-onUnmounted(() => { if (timer) clearInterval(timer); });
+let clockTimer: number | undefined;
 
-// ---- 密碼關卡(保留授權判斷,已綁定才會跳密碼;模擬:任意密碼皆可) ----
+// ---- 前往投播畫面 ----
+const goCast = () => { window.location.href = './broadcast.html#src=cast'; };
+
+// ---- 10 秒自動投播倒數 ----
+const AUTO_SECONDS = 10;
+const countdown = ref(AUTO_SECONDS);
+const autoActive = ref(true);
+let cdTimer: number | undefined;
+const cancelCountdown = () => {
+  autoActive.value = false;
+  if (cdTimer) { clearInterval(cdTimer); cdTimer = undefined; }
+};
+const startCountdown = () => {
+  autoActive.value = true;
+  countdown.value = AUTO_SECONDS;
+  if (cdTimer) clearInterval(cdTimer);
+  cdTimer = window.setInterval(() => {
+    countdown.value -= 1;
+    if (countdown.value <= 0) { cancelCountdown(); goCast(); }
+  }, 1000);
+};
+
+// ---- 密碼關卡(模擬:任意密碼皆可) ----
 const askPwd = ref(false);
 const pwd = ref('');
 const pwdErr = ref(false);
-const enter = () => {
-  if (!license.value) return;
-  askPwd.value = true; pwd.value = ''; pwdErr.value = false;
-};
-const enterCast = () => {
-  if (!license.value) return;
-  window.open('./broadcast.html#src=cast', 'neonCastWindow');
-};
+const enter = () => { cancelCountdown(); askPwd.value = true; pwd.value = ''; pwdErr.value = false; };
+const enterCast = () => { cancelCountdown(); goCast(); };
 const onPwd = (e: Event) => { pwd.value = (e.target as HTMLInputElement).value; pwdErr.value = false; };
 const submitPwd = () => {
   if (pwd.value.length > 0) window.location.href = './full-ranking.html';
@@ -44,49 +56,24 @@ const submitPwd = () => {
 const onPwdKey = (e: KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); submitPwd(); } };
 const closePwd = () => { askPwd.value = false; pwd.value = ''; pwdErr.value = false; };
 
-// ---- 顯示用 computed ----
-const maskKey = (k: string | undefined): string => {
-  if (!k) return '— —';
-  if (k.length <= 6) return k;
-  return `${k.slice(0, 3)}-***-${k.slice(-4)}`;
-};
-
-const storeNameZh = computed(() => license.value?.storeNameZh || license.value?.storeName || '— —');
-const storeNameEn = computed(() => license.value?.storeNameEn || '');
-const venuesText = computed(() => {
-  const v = license.value?.venues;
-  if (!v) return '— —';
-  return Array.isArray(v) ? v.map((x) => String(x).toUpperCase()).join(' · ') : String(v).toUpperCase();
+onMounted(() => {
+  tick();
+  clockTimer = window.setInterval(tick, 1000);
+  startCountdown();
 });
-const keyMasked = computed(() => maskKey(license.value?.key));
+onUnmounted(() => {
+  if (clockTimer) clearInterval(clockTimer);
+  cancelCountdown();
+});
 
-const statusText = computed(() => loading.value ? 'CHECKING' : (bound.value ? 'AUTHORIZED' : 'UNAUTHORIZED'));
-
-// 標題:zh 主中文/副英文,en 主英文/副不同英文
+// ---- 文字 ----
 const titleMain = computed(() => en.value ? 'LIVE RANKING' : '即時排行系統');
 const titleSub  = computed(() => en.value ? 'LEADERBOARD SYSTEM' : 'LIVE RANKING');
+const btnText   = computed(() => en.value ? 'ENTER CONSOLE' : '進入控制台');
+const castText  = computed(() => en.value ? 'CAST SCREEN' : '進入投播畫面');
+const btnIcon = '▶';
+const castIcon = '▣';
 
-// 已綁定主副:zh 主中(動詞+店名)/副英店名,en 主英店名/副中店名
-const boundName = computed(() => en.value ? (storeNameEn.value || storeNameZh.value) : `金鑰已綁定:${storeNameZh.value}`);
-const boundSub  = computed(() => en.value ? storeNameZh.value : storeNameEn.value);
-
-// 未綁定訊息
-const unboundMain = computed(() => en.value ? '⚠ NO LICENSE KEY' : '⚠ 尚未綁定金鑰');
-const unboundSub  = computed(() => en.value ? 'UNAUTHORIZED STATION' : 'NO LICENSE KEY DETECTED');
-const unboundDesc = computed(() =>
-  en.value
-    ? 'This station has not been registered. Please complete license binding in the main software before opening this page.'
-    : '本機尚未完成金鑰註冊,無法啟動投播控制台。請先在主軟體完成金鑰綁定後再進入此頁。'
-);
-
-// 按鈕文字
-const btnText = computed(() => {
-  if (bound.value) return en.value ? 'ENTER CONSOLE' : '進入控制台';
-  return en.value ? 'LOCKED' : '進入受限';
-});
-const btnIcon = computed(() => bound.value ? '▶' : '⚿');
-const castText = computed(() => bound.value ? (en.value ? 'CAST SCREEN' : '進入投播畫面') : (en.value ? 'LOCKED' : '進入受限'));
-const castIcon = computed(() => bound.value ? '▣' : '⚿');
 const tLockTitle = computed(() => en.value ? 'ENTER PASSWORD' : '請輸入密碼');
 const tLockSub = computed(() => en.value ? 'Password required to enter the console.' : '進入控制台需要輸入密碼');
 const tPwdPh = computed(() => en.value ? 'PASSWORD' : '密碼');
@@ -114,6 +101,7 @@ const tPwdHint = computed(() => en.value ? '// Demo: any input works' : '// 模�
         <div class="pwd-hint">{{ tPwdHint }}</div>
       </div>
     </div>
+
     <!-- 背景層 -->
     <div class="bg-grid"></div>
     <div class="bg-edge-glow"></div>
@@ -127,67 +115,22 @@ const tPwdHint = computed(() => en.value ? '// Demo: any input works' : '// 模�
 
     <!-- 主內容 -->
     <div class="content">
-      <!-- 標題區 -->
       <div class="title-block">
         <div class="kicker">◢ NEON CLASH · LEADERBOARD ◣</div>
         <div :class="['title-main', en ? 'title-en' : 'title-zh']">{{ titleMain }}</div>
         <div :class="['title-sub',  en ? 'title-en' : 'title-zh']">{{ titleSub }}</div>
       </div>
 
-      <!-- 身份卡 -->
-      <div :class="['card', { 'card-bound': bound, 'card-unbound': unbound, 'card-loading': loading }]">
-        <div class="card-header">
-          <div class="card-header-label">AUTHORIZATION STATUS</div>
-          <div class="card-status">
-            <span :class="['dot', bound ? 'dot-bound' : unbound ? 'dot-unbound' : 'dot-loading']"></span>
-            <span :class="['status', bound ? 'status-bound' : unbound ? 'status-unbound' : 'status-loading']">
-              {{ statusText }}
-            </span>
-          </div>
-        </div>
-
-        <!-- 已綁定 -->
-        <div v-if="bound" class="body-bound">
-          <div>
-            <div class="mono-label">KEY BOUND TO</div>
-            <div :class="['bound-name', en ? 'bound-name-en' : 'bound-name-zh']">{{ boundName }}</div>
-            <div :class="['bound-sub',  en ? 'bound-sub-en' : 'bound-sub-zh']">{{ boundSub }}</div>
-          </div>
-          <div class="bound-grid">
-            <div>
-              <div class="mono-sublabel">FIELD AUTHORIZED</div>
-              <div class="mono-value">{{ venuesText }}</div>
-            </div>
-            <div>
-              <div class="mono-sublabel">KEY ID</div>
-              <div class="mono-value">{{ keyMasked }}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 未綁定 -->
-        <div v-else-if="unbound" class="body-unbound">
-          <div :class="['unbound-main', en ? 'unbound-en' : 'unbound-zh']">{{ unboundMain }}</div>
-          <div class="unbound-sub">{{ unboundSub }}</div>
-          <div :class="['unbound-desc', en ? 'desc-en' : 'desc-zh']">{{ unboundDesc }}</div>
-        </div>
-
-        <!-- 載入中 -->
-        <div v-else class="body-loading">
-          <span class="dot dot-loading"></span>
-          <span class="loading-text">CHECKING LICENSE...</span>
-        </div>
-      </div>
-
       <!-- 進入按鈕 -->
       <div class="enter-row">
-        <button @click="enter" :class="['enter-btn', bound ? 'enter-enabled' : 'enter-disabled']">
-          <span :class="['enter-icon', { faded: !bound }]">{{ btnIcon }}</span>
+        <button @click="enter" class="enter-btn enter-enabled">
+          <span class="enter-icon">{{ btnIcon }}</span>
           <span>{{ btnText }}</span>
         </button>
-        <button @click="enterCast" :class="['enter-btn', 'cast-btn', bound ? 'cast-enabled' : 'enter-disabled']">
-          <span :class="['enter-icon', { faded: !bound }]">{{ castIcon }}</span>
+        <button @click="enterCast" class="enter-btn cast-btn cast-enabled">
+          <span class="enter-icon">{{ castIcon }}</span>
           <span>{{ castText }}</span>
+          <span v-if="autoActive" class="cd-badge">{{ en ? 'AUTO ' : '自動 ' }}{{ countdown }}s</span>
         </button>
       </div>
 
@@ -530,4 +473,18 @@ const tPwdHint = computed(() => en.value ? '// Demo: any input works' : '// 模�
   line-height: 1.7;
 }
 .footer-time { opacity: 0.7; }
+
+/* ===== 自動投播倒數徽章 ===== */
+.cd-badge {
+  margin-left: clamp(6px, 1vw, 10px);
+  font-family: 'Share Tech Mono', monospace;
+  font-weight: 700;
+  font-size: clamp(12px, 1.7vh, 15px);
+  letter-spacing: 1px;
+  color: #05070f;
+  background: #7ff0ff;
+  padding: 3px 10px;
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.55);
+}
 </style>
